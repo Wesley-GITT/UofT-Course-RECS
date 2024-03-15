@@ -1,0 +1,26 @@
+# Fdb version 4
+["pdflatex"] 1710541915 "/Users/webster/Developer/Git/UofT-Course-RECS/project_report.tex" "project_report.pdf" "project_report" 1710541915 2
+  "/Users/webster/Developer/Git/UofT-Course-RECS/project_report.tex" 1710541912 412 cfe534028beadf5ce515105a3827e8c4 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/generic/iftex/iftex.sty" 1644112042 7237 bdd120a32c8fdb4b433cf9ca2e7cd98a ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/generic/iftex/ifvtex.sty" 1572645307 1057 525c2192b5febbd8c1f662c9468335bb ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsbsy.sty" 1686341992 2222 499d61426192c39efd8f410ee1a52b9c ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsgen.sty" 1686341992 4173 82ac04dfb1256038fad068287fbb4fe6 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsmath.sty" 1686341992 88371 d84032c0f422c3d1e282266c01bef237 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amsopn.sty" 1686341992 4474 b811654f4bf125f11506d13d13647efb ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/amsmath/amstext.sty" 1686341992 2444 0d0c1ee65478277e8015d65b86983da2 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls" 1686341992 20144 fbcf51733730d8f1a62143512ff5b1fe ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/base/inputenc.sty" 1686341992 5048 4a74b0804469fbfae7849704c4687a07 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/base/size10.clo" 1686341992 8448 74078c4a887f2cdcd57c3ec111622740 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/geometry/geometry.sty" 1578002852 41601 9cf6c5257b1bc7af01a58859749dd37a ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/tex/latex/graphics/keyval.sty" 1654720880 2671 7e67d78d9b88c845599a85b2d41f2e39 ""
+  "/Users/webster/Library/TinyTeX/texmf-dist/web2c/texmf.cnf" 1681165822 40967 d940221f8762fd5848760382d97d1226 ""
+  "/Users/webster/Library/TinyTeX/texmf-var/web2c/pdftex/pdflatex.fmt" 1695240136 6774426 e6e377d35f578c15be0d8ef4bf44e5b3 ""
+  "/Users/webster/Library/TinyTeX/texmf.cnf" 1695093244 637 edd806fb06a89761a6034e1968af9017 ""
+  "biblatex.sty" 0 -1 0 ""
+  "project_report.aux" 0 -1 0 "pdflatex"
+  "project_report.tex" 1710541912 412 cfe534028beadf5ce515105a3827e8c4 ""
+  (generated)
+  "project_report.aux"
+  "project_report.log"
+  "project_report.pdf"
+  (rewritten before read)
