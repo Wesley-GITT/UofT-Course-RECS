@@ -1,8 +1,8 @@
-PWD /Users/webster/Developer/Git/UofT-Course-RECS
+PWD /Users/webster/Developer/Git/UofT-Course-RECS/report
 INPUT /Users/webster/Library/TinyTeX/texmf.cnf
 INPUT /Users/webster/Library/TinyTeX/texmf-dist/web2c/texmf.cnf
 INPUT /Users/webster/Library/TinyTeX/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT /Users/webster/Developer/Git/UofT-Course-RECS/project_report.tex
+INPUT /Users/webster/Developer/Git/UofT-Course-RECS/report/project_report.tex
 OUTPUT project_report.log
 INPUT /Users/webster/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
 INPUT /Users/webster/Library/TinyTeX/texmf-dist/tex/latex/base/article.cls
