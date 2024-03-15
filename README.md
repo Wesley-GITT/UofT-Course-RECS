@@ -37,5 +37,5 @@ There is a list of features we tend to accomplish for this project. Here is a gu
 
 - Show a list of courses student is required to take in a program
     - TODO
-- Show a list of courses student might want to take according courses he has done or is doing rn.
+- Show a list of courses student might want to take according courses he has done or is doing.
     - TODO
