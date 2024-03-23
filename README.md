@@ -1,6 +1,6 @@
 # CSC111 Project 2 Report: UofT Course Recommendation System
 
-This is a project written in python to recommend course to students.
+This is a project written in python to recommend ARTSCI course to students.
 Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/project2/phase2/) to project requirement
 
 
