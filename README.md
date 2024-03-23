@@ -18,9 +18,30 @@ This project mainly uses graph to recommend courses in uoft
     - Changes to your project plan (Who)
     - Discussion (Who)
     - References Section (Who)
-- Dataset (Who)
+- Dataset (Wes)
 - Features
-    - Show a list of courses required by program (Who)
+    - Recommendation:
+      - Input (?)
+      - Data Structure
+        - Graph
+          - Edges
+            - scores on the review
+          - Vertex:
+            - review made by user
+            - course
+              - req (parent class)
+                - init: use binary tree? load course req as boolean
+                - prerequisite (children)
+                - corequisite (children)
+              - breadth requirement (int)
+              - distribution requirement (int)
+              - programme completion requirement (class)
+        - load a graph (func) (?)
+      - Output
+        - recommend (func; default-max: 3)
+
+    - Information Query
+      - Input: course code/course name
 
 ## Features
 
