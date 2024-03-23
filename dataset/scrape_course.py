@@ -87,8 +87,10 @@ def course_in_row(block: Tag) -> str:
     return block_str
 
 
-def html_to_csv(course_html_path: str, save_dir: str = "", entry_per_file: int = 600) -> None:
+def html_to_csv(course_html_path: str, save_dir: str = "", entry_per_file: int = 0) -> None:
     """Scrape all the course information from the url specified.
+
+    When entry_per_file is set to -1, data will not be stored in multiple files
 
     This method uses Beautiful Soup 4 to access DOM element in html
     """
@@ -102,20 +104,25 @@ def html_to_csv(course_html_path: str, save_dir: str = "", entry_per_file: int =
 
         # Save the file into csv files
         number_of_entries = 0
-        w = None
+        w, epf = None, -1
+        if entry_per_file > 0:
+            epf = entry_per_file
+
         for block in blocks:
-            if number_of_entries % entry_per_file == 0:
-                save_path = f"{save_dir}/{number_of_entries // entry_per_file + 1}.csv"
+            if number_of_entries % epf == 0:
+                save_path = f"{save_dir}/{number_of_entries // epf + 1}.csv"
                 w = open(save_path, 'w')
 
             w.write(f"{course_in_row(block)}\n")
 
             number_of_entries += 1
-            if number_of_entries % entry_per_file == 0:
+            if entry_per_file <= 0:
+                epf = number_of_entries + 1
+            if number_of_entries % epf == 0:
                 w.close()
 
 
-def scrape_course(url: str, course_html_filename: str, save_dirname: str) -> None:
+def scrape_course(url: str, course_html_filename: str, save_dirname: str, entry_per_file: int = 0) -> None:
     """Scrape course information."""
     base_path = dirname(abspath(__file__))
     course_html_path = f"{base_path}/{course_html_filename}"
@@ -124,7 +131,7 @@ def scrape_course(url: str, course_html_filename: str, save_dirname: str) -> Non
     if not exists(course_html_path):
         download_course(url, course_html_path)
 
-    html_to_csv(course_html_path, save_dir)
+    html_to_csv(course_html_path, save_dir, entry_per_file)
 
 
 if __name__ == "__main__":
@@ -138,5 +145,5 @@ if __name__ == "__main__":
     # })
 
     scrape_course("https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1",
-                  "course_information.html", "course_data")
+                  "course_information.html", "course_data", 1800)
     
