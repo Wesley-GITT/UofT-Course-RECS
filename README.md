@@ -21,9 +21,6 @@ This project mainly uses graph to recommend courses in uoft
 - Dataset (Who)
 - Features
     - Show a list of courses required by program (Who)
-    - Show a list of courses in which one might be interested (Who)
-    - More Feature 1 (Who)
-    - More Feature 2 (Who)
 
 ## Features
 
@@ -33,9 +30,37 @@ There is a list of features we tend to accomplish for this project. Here is a gu
 - Add a sublist identifying hot to test this feature.
 - Below is two examples of one of the feature of the RECS.
 
+### Dataset
+
+- Course (code)
+- Reviews (code)
+
+
 ### A list of Features
 
-- Show a list of courses student is required to take in a program
-    - TODO
-- Show a list of courses student might want to take according courses he has done or is doing.
-    - TODO
+- Recommendation:
+  - Input:
+    - Take students current programme as input
+    - Optional: previous courses
+    - Optional: year the student is in
+  - Data Structure
+    - Graph
+      - Edges
+        - scores on the review
+      - Vertex:
+        - review made by user
+        - course
+          - prerequisite (class)
+            - TODO
+          - corequisite (class)
+            - TODO
+          - breadth requirement
+          - distribution requirement
+          - programme completion requirement
+    - load a graph (func)
+    - recommend (func; default-max: 3)
+  - Output
+    - Courses
+
+- Information Query
+  - Input: course code/course name
