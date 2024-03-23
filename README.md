@@ -36,7 +36,6 @@ This project mainly uses graph to recommend courses in uoft
               - breadth requirement (int)
               - distribution requirement (int)
               - programme completion requirement (class)
-                - 
         - load a graph (func) (?)
         - recommend (func; default-max: 3)
       - Output
