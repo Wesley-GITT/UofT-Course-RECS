@@ -42,7 +42,7 @@ def info_reader(block: Tag, css_selector: str) -> str:
     if len(elements) == 0:
         return ""
     else:
-        return elements[0].get_text().strip()
+        return elements[0].get_text().strip().replace("\n", "")
 
 
 def course_block_reader(block: Tag) -> dict[str, str]:
@@ -128,12 +128,15 @@ def scrape_course(url: str, course_html_filename: str, save_dirname: str) -> Non
 
 
 if __name__ == "__main__":
-    import python_ta
-    python_ta.check_all(config={
-        'max-line-length': 120,
-        'disable': ['E1136'],
-        'extra-imports': ['bs4', 'requests', 'os.path'],
-        'allowed-io': ['download_course', 'html_to_csv'],
-        'max-nested-blocks': 4
-    })
+    # import python_ta
+    # python_ta.check_all(config={
+    #     'max-line-length': 120,
+    #     'disable': ['E1136'],
+    #     'extra-imports': ['bs4', 'requests', 'os.path'],
+    #     'allowed-io': ['download_course', 'html_to_csv'],
+    #     'max-nested-blocks': 4
+    # })
+
+    scrape_course("https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1",
+                  "course_information.html", "course_data")
     
