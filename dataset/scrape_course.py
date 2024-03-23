@@ -125,7 +125,7 @@ def html_to_csv(course_html_path: str, save_dir: str = "", entry_per_file: int =
 def scrape_course(url: str, course_html_filename: str, save_dirname: str, entry_per_file: int = 0) -> None:
     """Scrape course information."""
     base_path = dirname(abspath(__file__))
-    course_html_path = f"{base_path}/{save_dirname}/{course_html_filename}"
+    course_html_path = f"{base_path}/{course_html_filename}"
     save_dir = f"{base_path}/{save_dirname}"
 
     if not exists(course_html_path):
@@ -145,5 +145,5 @@ if __name__ == "__main__":
     # })
 
     scrape_course("https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1",
-                  "course_information.html", "course_data")
+                  "course_information.html", "course_data", 1800)
     
