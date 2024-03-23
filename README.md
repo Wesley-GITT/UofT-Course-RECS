@@ -13,7 +13,7 @@ This project mainly uses graph to recommend courses in uoft
 - Writing Report
     - Introduction (Who)
     - Description of Dataset (Who)
-    - Computational overview (Who)
+    - Computational overview (Who)  
     - Instructions for obtaining datasets and running your program (Who)
     - Changes to your project plan (Who)
     - Discussion (Who)
