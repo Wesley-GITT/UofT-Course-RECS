@@ -7,37 +7,34 @@ Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/
 ## Tasks and Features
 
 ### Writing Report
-- Introduction (Who)
-- Description of Dataset (Who)
-- Computational overview (Who)  
-- Instructions for obtaining datasets and running your program (Who)
-- Changes to your project plan (Who)
-- Discussion (Who)
-- References Section (Who)
+- Introduction
+- Description of Dataset
+- Computational overview
+- Instructions for obtaining datasets and running your program
+- Changes to your project plan
+- Discussion
+- References Section
 ### Dataset (Wes)
 - Course
 - Reviews
 ### Features
 #### Recommendation:
 ##### Input
-- user input (courses completed, current courses, program, interest?)
-- load a graph (Wes)
+- user input (courses completed, courses passed (optional), programme interested in?)
+- load a graph
 ##### Data Structure
 ###### Graph
 - Edges
   - scores on the review
 - Vertex:
   - review made by user
+  - breadth requirement
+  - programme
   - course
-    - req (parent class)
-      - init: use binary tree? load course req as boolean
-      - prerequisite (children)
-      - corequisite (children)
-    - breadth requirement (int)
-    - distribution requirement (int)
-    - programme completion requirement (class)
+    - prerequisite
+    - corequisite
 ##### Output
-- recommend (func; default-max: 3)
+- recommend (func; default-max: 3 for each course)
 
 #### Information Query
 - Input: course code/course name
