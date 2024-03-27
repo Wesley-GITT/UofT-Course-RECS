@@ -10,7 +10,6 @@ USER_ID: the id of the user
 COURSE_CODE: the code of the course (as displayed on acorn)
 REVIEW: integer from 0-10 (original scale 0-5 with an interval of 0.5)
 
-
 NOTICE:
 It could take a long while to download all the data and convert them into csv files
 from the website because the amount of data is SUPER ENORMOUS, so be patient.
@@ -55,7 +54,6 @@ def scrape_review(url: str, course_dirname: str, save_dirname: str, entry_per_fi
     base_path = dirname(abspath(__file__))
     course_dirname = f"{base_path}/{course_dirname}"
     save_dirname = f"{base_path}/{save_dirname}"
-    
 
 
 if __name__ == "__main__":
@@ -69,4 +67,3 @@ if __name__ == "__main__":
     # })
 
     scrape_review("https://uoftindex.ca/courses?c=","course_information.html", "course_data", 1800)
-    
