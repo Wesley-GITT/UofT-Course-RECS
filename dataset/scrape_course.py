@@ -9,14 +9,14 @@ The generated csv contains the following (10) columns, in the following order:
 
 CODE: the code of the course (as displayed on acorn)
 NAME: the name of the course (as displayed on acorn)
-PREV_CODE: code previously used for the course
-HOURS: hours of lectures, tutorials, labs, practicals
-DETAIL: further description of the course
+# PREV_CODE: code previously used for the course
+# HOURS: hours of lectures, tutorials, labs, practicals
+# DETAIL: further description of the course
 PREREQ: prerequisite of the course
 COREQ: corequisite of the course
-RECOMMENDED_PREP: recommended preparation for the course
-EXCLUSIONS: exlusive course
-DIST_REQ: distribution requirement (the old breath requirement)
+# RECOMMENDED_PREP: recommended preparation for the course
+# EXCLUSIONS: exlusive course
+# DIST_REQ: distribution requirement (the old breath requirement)
 BREADTH_REQ: breadth requirement, see here: https://artsci.calendar.utoronto.ca/hbahbsc-requirements
 
 NOTICE:
@@ -36,8 +36,11 @@ def download_course(url: str, save_path: str = "") -> None:
         f.write(r.content)
 
 
-def info_reader(block: Tag, css_selector: str) -> str:
-    """Helper function of course_block_reader to extract text from an html element"""
+def get_text_from_html_element(block: Tag, css_selector: str) -> str:
+    """
+    Helper function of course_block_reader. Extract text from an html element.
+    If the element is not found, return an empty string.
+    """
     elements = block.select(css_selector)
     if len(elements) == 0:
         return ""
@@ -45,8 +48,8 @@ def info_reader(block: Tag, css_selector: str) -> str:
         return elements[0].get_text().strip().replace("\n", "")
 
 
-def course_block_reader(block: Tag) -> dict[str, str]:
-    """Helper function of html_to_csv to convert html to a mapping"""
+def course_block_to_mapping(block: Tag) -> dict[str, str]:
+    """Helper function of html_to_csv. Convert html to a mapping of course information."""
     css_selector_mapping = {
         "code_and_name": ".views-field-title",
         # "prev_code": "views-field-field-previous-course-number .field-content",
@@ -61,7 +64,7 @@ def course_block_reader(block: Tag) -> dict[str, str]:
 
     course_data = {}
     for key in css_selector_mapping:
-        course_data[key] = info_reader(block, css_selector_mapping[key])
+        course_data[key] = get_text_from_html_element(block, css_selector_mapping[key])
 
     # Adjust some of the data
     lst = course_data["code_and_name"].split(" - ")
@@ -71,9 +74,11 @@ def course_block_reader(block: Tag) -> dict[str, str]:
 
 
 def course_in_row(block: Tag) -> str:
-    """Helper function of html_to_csv to convert html to a row csv strings"""
+    """
+    Helper function of html_to_csv. Return course information in a row of csv string.
+    """
     block_str = ""
-    row_data = course_block_reader(block)
+    row_data = course_block_to_mapping(block)
     row = [
         row_data["code"],
         row_data["name"],
@@ -96,11 +101,10 @@ def course_in_row(block: Tag) -> str:
 
 
 def html_to_csv(course_html_path: str, save_dir: str = "", entry_per_file: int = 0) -> None:
-    """Scrape all the course information from the url specified.
-
+    """
+    Scrape all the course information from the url specified.
     When entry_per_file is set to -1, data will not be stored in multiple files
-
-    This method uses Beautiful Soup 4 to access DOM element in html
+    This method uses Beautiful Soup 4 to access DOM element in html.
     """
     with open(course_html_path, 'r') as f:
         # Read content from HTML file first
