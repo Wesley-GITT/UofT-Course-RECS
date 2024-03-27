@@ -49,13 +49,13 @@ def course_block_reader(block: Tag) -> dict[str, str]:
     """Helper function of html_to_csv to convert html to a mapping"""
     css_selector_mapping = {
         "code_and_name": ".views-field-title",
-        "prev_code": "views-field-field-previous-course-number .field-content",
-        "hours": ".views-field-field-hours .field-content", "detail": ".views-field-body",
+        # "prev_code": "views-field-field-previous-course-number .field-content",
+        # "hours": ".views-field-field-hours .field-content", "detail": ".views-field-body",
         "prereq": ".views-field-field-prerequisite .field-content",
         "coreq": ".views-field-field-corequisite .field-content",
-        "recommended_prep": ".views-field-field-recommended .field-content",
-        "exclusions": ".views-field-field-exclusion .field-content",
-        "dist_req": ".views-field-field-distribution-requirements .field-content",
+        # "recommended_prep": ".views-field-field-recommended .field-content",
+        # "exclusions": ".views-field-field-exclusion .field-content",
+        # "dist_req": ".views-field-field-distribution-requirements .field-content",
         "breadth_req": ".views-label-field-breadth-requirements .field-content"
     }
 
@@ -75,9 +75,17 @@ def course_in_row(block: Tag) -> str:
     block_str = ""
     row_data = course_block_reader(block)
     row = [
-        row_data["code"], row_data["name"], row_data["prev_code"], row_data["hours"],
-        row_data["detail"], row_data["prereq"], row_data["coreq"], row_data["recommended_prep"],
-        row_data["exclusions"], row_data["dist_req"], row_data["breadth_req"]
+        row_data["code"],
+        row_data["name"],
+        # row_data["prev_code"],
+        # row_data["hours"],
+        # row_data["detail"],
+        row_data["prereq"],
+        row_data["coreq"],
+        # row_data["recommended_prep"],
+        # row_data["exclusions"],
+        # row_data["dist_req"],
+        row_data["breadth_req"]
     ]
     for i in range(len(row)):
         block_str += row[i]
