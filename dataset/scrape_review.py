@@ -44,6 +44,9 @@ def go_to_evaluation_page(utorid: str, passwd: str) -> webdriver:
     Navigate browser to quercus page and then evaluation page
     """
 
+    opts = Options()
+    # opts.add_argument("--headless")
+
     
     
 
