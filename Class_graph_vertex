@@ -78,20 +78,23 @@ class _Vertex:
         - breath_num: The breath_requirement number, in 12345
         - neighbours: The vertices that are adjacent to this vertex, and their corresponding
             edge weights.
+        - year: the year of the course, in 1234
 
     Representation Invariants:
         - self not in self.neighbours
         - all(self in u.neighbours for u in self.neighbours)
-        - self.kind in {'user', 'course', 'programme', 'breath'}
+        - self.kind in {'user', 'course', 'programme', 'breath', 'year'}
     """
     item: Any
     kind: str
     prerequisite: Optional[list[str]]
     corequisite: Optional[list[str]]
     breath_num: Optional[int]
+    year: Optional[int]
     neighbours: dict[_Vertex, Union[int, float]]
 
-    def __init__(self, item: Any, kind: str, prerequisite: list[str], corequisite: list[str], breath_num: int) -> None:
+    def __init__(self, item: Any, kind: str, prerequisite: list[str],
+                 corequisite: list[str], breath_num: int, year: int) -> None:
         """Initialize a new vertex with the given item and kind.
 
         This vertex is initialized with no neighbours.
@@ -105,6 +108,7 @@ class _Vertex:
         self.prerequisite = prerequisite
         self.corequisite = corequisite
         self.breath_num = breath_num
+        self.year = year
 
     def degree(self) -> int:
         """Return the degree of this vertex."""
