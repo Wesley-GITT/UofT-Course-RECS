@@ -2,7 +2,7 @@
 This is a python file that downloads all (latest) course information (of the Faculty of Art
 and Science, St. George Campus ONLY) and convert it into csv files
 
-The data for courses in 2023-2024 was scraped from:
+The data for courses in 2023-2024 was generated from:
 https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1
 
 The generated csv contains the following (10) columns, in the following order:
@@ -19,21 +19,36 @@ COREQ: corequisite of the course
 # DIST_REQ: distribution requirement (the old breath requirement)
 BREADTH_REQ: breadth requirement, see here: https://artsci.calendar.utoronto.ca/hbahbsc-requirements
 
+- Data with '#' at the beginning are ignored
+
 NOTICE:
 It could take a long while to download all the data and convert them into csv files
 from the website because the amount of data is SUPER ENORMOUS, so be patient.
 """
 
-from os.path import abspath, dirname, exists
+from os.path import abspath
 from bs4 import BeautifulSoup, Tag
 import requests
 
 
-def download_course(url: str, save_path: str = "") -> None:
-    """Save the html file first"""
-    with open(save_path, 'wb') as f:
-        r = requests.get(url, allow_redirects=True)
-        f.write(r.content)
+def get_url_html(url: str) -> str:
+    """Get html content of a webpage at specified url."""
+    r = requests.get(url, allow_redirects=True)
+    return r.content
+
+
+def in_a_row(mapping: dict[str, str], order: list) -> str:
+    """
+    Helper function of html_to_csv. Return course information in a row of csv string.
+    
+    Precondition:
+      - all(key in mapping for key in order)
+    """
+    block_str = ""
+    for key in order:
+        block_str += mapping[key] + ":"
+
+    return block_str[:len(block_str) - 1]
 
 
 def get_text_from_html_element(block: Tag, css_selector: str) -> str:
@@ -48,7 +63,7 @@ def get_text_from_html_element(block: Tag, css_selector: str) -> str:
         return elements[0].get_text().strip().replace("\n", "")
 
 
-def course_block_to_mapping(block: Tag) -> dict[str, str]:
+def get_course_info_from_html(block: Tag) -> dict[str, str]:
     """Helper function of html_to_csv. Convert html to a mapping of course information."""
     css_selector_mapping = {
         "code_and_name": ".views-field-title",
@@ -73,89 +88,36 @@ def course_block_to_mapping(block: Tag) -> dict[str, str]:
     return course_data
 
 
-def course_in_row(block: Tag) -> str:
-    """
-    Helper function of html_to_csv. Return course information in a row of csv string.
-    """
-    block_str = ""
-    row_data = course_block_to_mapping(block)
-    row = [
-        row_data["code"],
-        row_data["name"],
-        # row_data["prev_code"],
-        # row_data["hours"],
-        # row_data["detail"],
-        row_data["prereq"],
-        row_data["coreq"],
-        # row_data["recommended_prep"],
-        # row_data["exclusions"],
-        # row_data["dist_req"],
-        row_data["breadth_req"]
-    ]
-    for i in range(len(row)):
-        block_str += row[i]
-        if i != len(row) - 1:
-            block_str += ":"
-
-    return block_str
-
-
-def html_to_csv(course_html_path: str, save_dir: str = "", entry_per_file: int = 0) -> None:
+def scrape_course(url: str, save_dir: str = "") -> None:
     """
     Scrape all the course information from the url specified.
     When entry_per_file is set to -1, data will not be stored in multiple files
     This method uses Beautiful Soup 4 to access DOM element in html.
     """
-    with open(course_html_path, 'r') as f:
-        # Read content from HTML file first
-        html_content = f.read()
+    html_content = get_url_html(url)
 
-        # Use Beautiful Soup to parse and access DOM element
-        document = BeautifulSoup(html_content)
-        blocks = document.select(".no-break.w3-row.views-row")
+    # Use Beautiful Soup to parse and access DOM element
+    document = BeautifulSoup(html_content)
+    blocks = document.select(".no-break.w3-row.views-row")
 
-        # Save the file into csv files
-        number_of_entries = 0
-        w, epf = None, -1
-        if entry_per_file > 0:
-            epf = entry_per_file
-
+    # Save the course information into csv
+    save_path = abspath(f"{save_dir}/course.csv")
+    with open(save_path, "w") as w:
         for block in blocks:
-            if number_of_entries % epf == 0:
-                save_path = f"{save_dir}/{number_of_entries // epf + 1}.csv"
-                w = open(save_path, 'w')
-
-            w.write(f"{course_in_row(block)}\n")
-
-            number_of_entries += 1
-            if entry_per_file <= 0:
-                epf = number_of_entries + 1
-            if number_of_entries % epf == 0:
-                w.close()
-
-
-def scrape_course(url: str, course_html_filename: str, save_dirname: str, entry_per_file: int = 0) -> None:
-    """Scrape course information."""
-    base_path = dirname(abspath(__file__))
-    course_html_path = f"{base_path}/{course_html_filename}"
-    save_dir = f"{base_path}/{save_dirname}"
-
-    if not exists(course_html_path):
-        download_course(url, course_html_path)
-
-    html_to_csv(course_html_path, save_dir, entry_per_file)
+            course_data = get_course_info_from_html(block)
+            order = ["code", 'name', 'prereq', 'coreq', 'breadth_req']
+            w.write(f"{in_a_row(course_data, order)}\n")
 
 
 if __name__ == "__main__":
     # import python_ta
     # python_ta.check_all(config={
     #     'max-line-length': 120,
-    #     'disable': ['E1136'],
+    #     'disable': ['R1732'],
     #     'extra-imports': ['bs4', 'requests', 'os.path'],
-    #     'allowed-io': ['download_course', 'html_to_csv'],
+    #     'allowed-io': ['scrape_course'],
     #     'max-nested-blocks': 4
     # })
 
-    scrape_course("https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1",
-                  "course_information.html", "course_data", 1800)
-    
+    course_info_url = "https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1"
+    scrape_course(course_info_url, "dataset/")
