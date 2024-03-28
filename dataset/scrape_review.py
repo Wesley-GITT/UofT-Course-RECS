@@ -1,69 +1,59 @@
 """SCRAPE_REVIEW
-This is a python file that downloads all courses reviews from https://www.uoftindex.ca/
+This is a python file that downloads all (latest) course review (of the Faculty of Art
+and Science, St. George Campus ONLY) and convert it into csv files
 
-This python file uses course codes from course_data. Please ensure course_data are
-downloaded before running this python file.
+The data for reviews in 2023-2024 was generated from course evaluation page from quercus:
+
 
 The generated csv contains the following (10) columns, in the following order:
 
-USER_ID: the id of the user
-COURSE_CODE: the code of the course (as displayed on acorn)
-REVIEW: integer from 0-10 (original scale 0-5 with an interval of 0.5)
+DEPT: department which offers the course
+DIV: faculty which offers the course
+CODE: course code as displayed on ACORN
+LEC: lecture code as displayed on ACORN
+LNAME: last name of the professor teaching the lecture
+FNAME: first name of the professor teaching the lecture
+TERM: term (fall/winter/summer) in which the course is offered
+YEAR: year in which the course is offered
+ITEM1: I found the course intellectually stimulating.
+ITEM2: The course provided me with a deeper understanding of the subject matter.
+ITEM3: The instructor created a course atmosphere that was conducive to my learning.
+ITEM4: Course projects, assignments, tests and/or exams improved my understanding of the course material.
+ITEM5: Course projects, assignments, tests and/or exams provided opportunity for me to demonstrate an understanding of the course material.
+ITEM6: Overall, the quality of my learning experience in this course was:
+ITEM9: The instructor generated enthusiasm for learning in the course.
+ITEM10: Compared to other courses, the workload for this course was…
+ITEM11: I would recommend this course to other students.
+STNUM: number of students invited to complete the evaluation
+STRSP: number of students completed the evaluation
+
+- Data with '#' at the beginning are ignored
 
 NOTICE:
 It could take a long while to download all the data and convert them into csv files
 from the website because the amount of data is SUPER ENORMOUS, so be patient.
 """
 
-from os.path import abspath, dirname, exists
-from bs4 import BeautifulSoup, Tag
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
 
-def check_website_review(query_url: str) -> str:
+def go_to_evaluation_page(utorid: str, passwd: str) -> webdriver:
     """
-    Helper function of get_review_from_url
-    Visit the url and return html code of the query_url
-    This methods uses requests to view sources code of a webpage at the specified url.
+    Navigate browser to quercus page and then evaluation page
     """
-    ...
+
+    opts = Options()
+    # opts.add_argument("--headless")
+
+    
+    
 
 
-def get_review_from_block(block: Tag) -> dict[str, int]:
-    """Helper function of get_review_from_url to convert html to a mapping"""
-    ...
-
-
-def get_review_from_url(query_url: str) -> list[dict[str, int]]:
-    """Helper function of scrape_review. Return a list of reviews from the corresponding url"""
-    ...
-
-
-def review_in_rows(reviews: list[dict[str, int]]) -> str:
-    """Helper function of scrape_review. Return a row of csv string"""
-    ...
-
-
-
-
-def scrape_review(url: str, course_dirname: str, save_dirname: str, entry_per_file: int = 0) -> None:
+def scrape_review(utorid: str, passwd: str, save_dir: str = "") -> None:
     """
-    Scrape all course reviews from the url specified.
-    When entry_per_file is set to -1, data will not be stored in multiple files
-    This method uses Beautiful Soup 4 to access DOM element in html"""
-    base_path = dirname(abspath(__file__))
-    course_dirname = f"{base_path}/{course_dirname}"
-    save_dirname = f"{base_path}/{save_dirname}"
+    Scrape reviews of courses in recent years and save it into a csv file
+    Require utorid and password to open the page.
+    """
 
-
-if __name__ == "__main__":
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'disable': ['E1136'],
-    #     'extra-imports': ['bs4', 'requests', 'os.path'],
-    #     'allowed-io': ['download_course', 'scrape_review'],
-    #     'max-nested-blocks': 4
-    # })
-
-    scrape_review("https://uoftindex.ca/courses?c=","course_information.html", "course_data", 1800)
