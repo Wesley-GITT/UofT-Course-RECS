@@ -31,6 +31,7 @@ Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/
   - breadth requirement
   - programme
   - course
+  - year
     - prerequisite
     - corequisite
 ##### Output
