@@ -14,7 +14,7 @@ Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/
 - Changes to your project plan
 - Discussion
 - References Section
-### Dataset (Wes)
+### Dataset
 - Course
 - Reviews
 ### Features
