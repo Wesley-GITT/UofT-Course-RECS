@@ -1,5 +1,5 @@
 """
-This is a helper module for scrape_review to automate create and navigate a web browser
+This is a helper module for scrape_review to automatically create and navigate a web browser
 to quercus and then the evaluation page.
 """
 

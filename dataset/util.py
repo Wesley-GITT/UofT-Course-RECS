@@ -1,3 +1,7 @@
+"""
+This is a helper module for scrape_review and scrape_crouse.
+"""
+
 from bs4 import Tag
 import requests
 
