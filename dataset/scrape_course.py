@@ -71,7 +71,7 @@ def scrape_course(save_dir: str = "") -> None:
         for block in blocks:
             course_data = get_course_info_from_html(block)
             order = ["code", 'name', 'prereq', 'coreq', 'breadth_req']
-            w.write(f"{in_a_row(course_data, order)}\n")
+            w.write(f"{in_a_row(course_data, order, '|')}\n")
 
 
 if __name__ == "__main__":

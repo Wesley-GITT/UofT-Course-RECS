@@ -2,7 +2,7 @@
 This is a python file that downloads all (latest) course review (of the Faculty of Art
 and Science, St. George Campus ONLY) and convert it into csv files
 
-The data for reviews in 2023-2024 was generated from course evaluation page from Quercus Page:
+The data for reviews in 2023-2024 was generated from course evaluation page on Quercus:
 
 The generated csv contains the following (?) columns, in the following order, 
 

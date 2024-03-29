@@ -7,7 +7,7 @@ def get_url_html(url: str) -> str:
     return r.content
 
 
-def in_a_row(mapping: dict[str, str], order: list) -> str:
+def in_a_row(mapping: dict[str, str], order: list, delimiter: str = ":") -> str:
     """
     Return course information in a row of csv string.
     
@@ -16,7 +16,7 @@ def in_a_row(mapping: dict[str, str], order: list) -> str:
     """
     block_str = ""
     for key in order:
-        block_str += mapping[key] + ":"
+        block_str += mapping[key] + delimiter
 
     return block_str[:len(block_str) - 1]
 
