@@ -28,7 +28,7 @@ from the website because the amount of data is SUPER ENORMOUS, so be patient.
 
 from os.path import abspath
 from bs4 import BeautifulSoup, Tag
-from util import get_url_html, in_a_row, get_info_from_html
+from dataset_util import get_url_html, in_a_row, get_info_from_html
 
 
 def get_course_info_from_html(block: Tag) -> dict[str, str]:
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     # python_ta.check_all(config={
     #     'max-line-length': 120,
     #     'disable': ['R1732'],
-    #     'extra-imports': ['bs4', 'util', 'os.path'],
+    #     'extra-imports': ['bs4', 'dataset_util', 'os.path'],
     #     'allowed-io': ['scrape_course'],
     #     'max-nested-blocks': 4
     # })

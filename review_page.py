@@ -115,5 +115,4 @@ if __name__ == "__main__":
         'extra-imports': ["selenium", "selenium.webdriver.common.keys", "selenium.webdriver.remote.webelement",
                           "selenium.webdriver.chrome.options", "selenium.webdriver.common.by",
                           "selenium.webdriver.support", "selenium.webdriver.support.ui"],
-        'max-nested-blocks': 4
     })
