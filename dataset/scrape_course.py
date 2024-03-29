@@ -69,7 +69,7 @@ def scrape_course(save_dir: str = "") -> None:
     save_path = abspath(f"{save_dir}/course.csv")
     with open(save_path, "w") as w:
         for block in blocks:
-            course_data = get_info_from_html(block)
+            course_data = get_course_info_from_html(block)
             order = ["code", 'name', 'prereq', 'coreq', 'breadth_req']
             w.write(f"{in_a_row(course_data, order)}\n")
 
