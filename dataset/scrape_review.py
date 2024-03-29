@@ -1,69 +1,161 @@
 """SCRAPE_REVIEW
-This is a python file that downloads all courses reviews from https://www.uoftindex.ca/
+This is a python file that downloads all (latest) course review (of the Faculty of Art
+and Science, St. George Campus ONLY) and convert it into csv files
 
-This python file uses course codes from course_data. Please ensure course_data are
-downloaded before running this python file.
+The data for reviews in 2023-2024 was generated from course evaluation page from Quercus Page:
 
-The generated csv contains the following (10) columns, in the following order:
+The generated csv contains the following (?) columns, in the following order, 
 
-USER_ID: the id of the user
-COURSE_CODE: the code of the course (as displayed on acorn)
-REVIEW: integer from 0-10 (original scale 0-5 with an interval of 0.5)
+DEPT: department which offers the course
+DIV: faculty which offers the course
+CODE: course code as displayed on ACORN
+LEC: lecture code as displayed on ACORN
+LNAME: last name of the professor teaching the lecture
+FNAME: first name of the professor teaching the lecture
+TERM: term (fall/winter/summer) in which the course is offered
+YEAR: year in which the course is offered
+ITEM1: I found the course intellectually stimulating.
+ITEM2: The course provided me with a deeper understanding of the subject matter.
+ITEM3: The instructor created a course atmosphere that was conducive to my learning.
+ITEM4: Course projects, assignments, tests and/or exams improved my understanding of the course material.
+ITEM5: Course projects, assignments, tests and/or exams provided opportunity for me to demonstrate an understanding
+       of the course material.
+ITEM6: Overall, the quality of my learning experience in this course was, 
+ITEM9: The instructor generated enthusiasm for learning in the course.
+ITEM10: Compared to other courses, the workload for this course was…
+ITEM11: I would recommend this course to other students.
+STNUM: number of students invited to complete the evaluation
+STRSP: number of students completed the evaluation
 
-NOTICE:
+- Data with '#' at the beginning are ignored
+
+NOTICE, 
 It could take a long while to download all the data and convert them into csv files
 from the website because the amount of data is SUPER ENORMOUS, so be patient.
 """
 
-from os.path import abspath, dirname, exists
+from os.path import abspath
+from getpass import getpass
+from multiprocessing import Process, Manager
+from time import sleep
 from bs4 import BeautifulSoup, Tag
-import requests
+from util import in_a_row, get_info_from_html
+from review_page import EvalPage
 
 
-def check_website_review(query_url: str) -> str:
+def get_review_info_from_html(block: Tag) -> dict[str, str]:
+    """Helper function of scrape_review. Convert html to a mapping of course information."""
+    css_selector_list = [
+        "dept", "div", "code_lec", "lname", "fname", "term", "year", "item1", "item2",
+        "item3", "item4", "item5", "item6", "item9", "item10", "item11", "stnum", "strsp"
+    ]
+    css_selector_mapping = {}
+    for i in range(len(css_selector_list)):
+        item = css_selector_list[i]
+        css_selector_mapping[item] = f"td:nth-child({i + 1})"
+
+    review_data = get_info_from_html(block, css_selector_mapping)
+    # Adjust some of the data
+    code_lec = review_data["code_lec"]
+    code = block.get("sk")
+    tmp = code_lec[::-1]
+    if "-" in tmp:
+        tmp = tmp[:tmp.index("-")]
+    else:
+        tmp = tmp[:7]
+    lec = tmp[::-1].strip()
+    review_data["code"] = code
+    review_data["lec"] = lec
+    review_data.pop("code_lec")
+    return review_data
+
+
+def print_progress(i: int, total: int, length: int = 50) -> None:
+    """Print the progress bar"""
+    bar_str = int(i / total * float(length)) * "#" + int((total - i) / total * float(length)) * "-"
+    percent = round(i / total * 100, 1)
+    print(f"[{bar_str}] {percent}% | {i} out of {total}", end="\r")
+
+
+def progress_monitor(dct: dict[int, str], total: int, length: int = 50) -> None:
+    """Print the overall progress constantly untill done."""
+    completed = len(dct)
+    print_progress(completed, total, length)
+    sleep(1)
+
+    if completed < total:
+        progress_monitor(dct, total, length)
+
+
+def open_and_save(utorid: str, passwd: str, index: int, process_num: int, row_data: dict[int, str]) -> None:
     """
-    Helper function of get_review_from_url
-    Visit the url and return html code of the query_url
-    This methods uses requests to view sources code of a webpage at the specified url.
+    Open a single process of webdriver to save data of each pages from start to end inclusive
+    into the row_data list and return the list to user.
+    This method uses Beautiful Soup 4 to access DOM element in html.
     """
-    ...
+    page = EvalPage(utorid, passwd, 100)
+
+    inlen = page.get_num_pages() // process_num
+    if page.get_num_pages() % process_num != 0:
+        inlen += 1
+
+    start = inlen * index
+    end = min(inlen * (index + 1), page.get_num_records() - 1)
+
+    for i in range(start + 1, end + 1):
+        html = page.get_data(i)
+        document = BeautifulSoup(html, "html.parser")
+        blocks = document.select(".gData")
+        for j in range(len(blocks)):
+            order = [
+                "dept", "div", "code", "lec", "lname", "fname", "term", "year", "item1", "item2",
+                "item3", "item4", "item5", "item6", "item9", "item10", "item11", "stnum", "strsp"
+            ]
+            row_data[(i - 1) * 100 + j] = in_a_row(get_review_info_from_html(blocks[j]), order)
 
 
-def get_review_from_block(block: Tag) -> dict[str, int]:
-    """Helper function of get_review_from_url to convert html to a mapping"""
-    ...
-
-
-def get_review_from_url(query_url: str) -> list[dict[str, int]]:
-    """Helper function of scrape_review. Return a list of reviews from the corresponding url"""
-    ...
-
-
-def review_in_rows(reviews: list[dict[str, int]]) -> str:
-    """Helper function of scrape_review. Return a row of csv string"""
-    ...
-
-
-
-
-def scrape_review(url: str, course_dirname: str, save_dirname: str, entry_per_file: int = 0) -> None:
+def scrape_review(save_dir: str = "") -> None:
     """
-    Scrape all course reviews from the url specified.
-    When entry_per_file is set to -1, data will not be stored in multiple files
-    This method uses Beautiful Soup 4 to access DOM element in html"""
-    base_path = dirname(abspath(__file__))
-    course_dirname = f"{base_path}/{course_dirname}"
-    save_dirname = f"{base_path}/{save_dirname}"
+    Scrape all the review information from the url specified.
+    """
+
+    print("Authentication Required.\n")
+    utorid = input("Enter your UTORid: ")
+    passwd = getpass("Enter your password: ")
+    print()
+
+    process_num = 1
+    processes = []
+    with Manager() as manager:
+        row_data = manager.dict()
+
+        monitor = Process(target=progress_monitor, args=(row_data, 38632))
+        monitor.start()
+
+        for i in range(process_num):
+            p = Process(target=open_and_save, args=(utorid, passwd, i, process_num, row_data,))
+            p.start()
+            processes.append(p)
+
+        for p in processes:
+            p.join()
+
+        monitor.join()
+
+        save_path = f"{save_dir}/review.csv"
+        with open(abspath(save_path), "w") as w:
+            sorted_data = sorted(row_data.items())
+            for _, value in sorted_data:
+                w.write(f"{value}\n")
 
 
 if __name__ == "__main__":
+    scrape_review("dataset/")
+
     # import python_ta
     # python_ta.check_all(config={
     #     'max-line-length': 120,
-    #     'disable': ['E1136'],
-    #     'extra-imports': ['bs4', 'requests', 'os.path'],
-    #     'allowed-io': ['download_course', 'scrape_review'],
+    #     'extra-imports': ['bs4', 'util', 'os.path', 'time', 'multiprocessing', 'review_page', 'getpass'],
+    #     'allowed-io': ['scrape_review'],
     #     'max-nested-blocks': 4
     # })
-
-    scrape_review("https://uoftindex.ca/courses?c=","course_information.html", "course_data", 1800)

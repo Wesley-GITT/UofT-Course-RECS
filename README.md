@@ -27,10 +27,11 @@ Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/
 - Edges
   - scores on the review
 - Vertex:
-  - review made by user
+  - user
   - breadth requirement
   - programme
   - course
+  - year
     - prerequisite
     - corequisite
 ##### Output
