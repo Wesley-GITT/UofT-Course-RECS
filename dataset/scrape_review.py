@@ -40,7 +40,7 @@ from multiprocessing import Process, Manager
 from time import sleep
 from bs4 import BeautifulSoup, Tag
 from util import in_a_row, get_info_from_html
-from review_page import EvalPage
+from review_page import EvalPage, QuercusPage
 
 
 def get_review_info_from_html(block: Tag) -> dict[str, str]:
@@ -70,30 +70,30 @@ def get_review_info_from_html(block: Tag) -> dict[str, str]:
     return review_data
 
 
-def print_progress(i: int, total: int, length: int = 50) -> None:
+def print_progress(i: int, total: int, length: int = 50, prefix: str = "") -> None:
     """Print the progress bar"""
     bar_str = int(i / total * float(length)) * "#" + int((total - i) / total * float(length)) * "-"
     percent = round(i / total * 100, 1)
-    print(f"[{bar_str}] {percent}% | {i} out of {total}", end="\r")
+    print(f"{prefix} [{bar_str}] {percent}% | {i} out of {total}", end="\r")
 
 
-def progress_monitor(dct: dict[int, str], total: int, length: int = 50) -> None:
+def progress_monitor(dct: dict[int, str], total: int, length: int = 50, prefix: str = "") -> None:
     """Print the overall progress constantly untill done."""
     completed = len(dct)
-    print_progress(completed, total, length)
-    sleep(1)
 
-    if completed < total:
-        progress_monitor(dct, total, length)
+    while completed < total:
+        completed = len(dct)
+        print_progress(completed, total, length, prefix)
+        sleep(0.01)
 
 
-def open_and_save(utorid: str, passwd: str, index: int, process_num: int, row_data: dict[int, str]) -> None:
+def open_and_save(url: str, index: int, process_num: int, row_data: dict[int, str]) -> None:
     """
     Open a single process of webdriver to save data of each pages from start to end inclusive
     into the row_data list and return the list to user.
     This method uses Beautiful Soup 4 to access DOM element in html.
     """
-    page = EvalPage(utorid, passwd, 100)
+    page = EvalPage(url, 100)
 
     inlen = page.get_num_pages() // process_num
     if page.get_num_pages() % process_num != 0:
@@ -122,31 +122,38 @@ def scrape_review(save_dir: str = "") -> None:
     print("Authentication Required.\n")
     utorid = input("Enter your UTORid: ")
     passwd = getpass("Enter your password: ")
-    print()
+    print("\nLoading Quercus and Evaluation Page...", end="\r")
+    url = QuercusPage().get_link(utorid, passwd)
 
-    process_num = 1
+    process_num = 64
     processes = []
     with Manager() as manager:
         row_data = manager.dict()
 
-        monitor = Process(target=progress_monitor, args=(row_data, 38632))
-        monitor.start()
-
         for i in range(process_num):
-            p = Process(target=open_and_save, args=(utorid, passwd, i, process_num, row_data,))
+            p = Process(target=open_and_save, args=(url, i, process_num, row_data,))
             p.start()
             processes.append(p)
+
+        sleep(60)
+        print("Loading Quercus and Evaluation Page...Done")
+        monitor = Process(target=progress_monitor, args=(row_data, 38632, 50, "Downloading data:",))
+        monitor.start()
 
         for p in processes:
             p.join()
 
         monitor.join()
+        print("Downloading data...Done")
+        print("Saving data to csv file...", end="\r")
 
         save_path = f"{save_dir}/review.csv"
         with open(abspath(save_path), "w") as w:
             sorted_data = sorted(row_data.items())
             for _, value in sorted_data:
                 w.write(f"{value}\n")
+
+        print("Saving data to csv file...Done")
 
 
 if __name__ == "__main__":
