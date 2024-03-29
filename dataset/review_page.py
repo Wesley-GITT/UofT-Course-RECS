@@ -1,5 +1,5 @@
 """
-This is a helper module for scrape_review to automate create and navigate a web browser
+This is a helper module for scrape_review to automatically create and navigate a web browser
 to quercus and then the evaluation page.
 """
 
@@ -12,26 +12,26 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait, Select
 
 
-class EvalPage:
-    """A webdriver instance to scrape review from UofT evaluation page"""
+class WebPage:
+    """Parent class of QuercusPage and EvalPage"""
 
     driver: webdriver.Chrome
 
-    def __init__(self, utorid: str, passwd: str, max_page: int = 10) -> None:
-        """
-        Initialize an evaluation page in a chrome browser and configure it.
-        max_page is the maximum number of items to display at once.
-        
-        Preconditions:
-          - max_page in [5, 10, 15, 20, 25, 50, 100]
-        """
+    def select(self, css_selector: str) -> WebElement:
+        """Select the specified html element"""
+        return self.driver.find_element(By.CSS_SELECTOR, css_selector)
 
+
+class QuercusPage(WebPage):
+    """A webdriver instance to login Quercus and find the link of evaluation page"""
+
+    def get_link(self, utorid: str, passwd: str) -> str:
+        """Get the link for evaluation page"""
         # initialize a google chrome browser
         options = Options()
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         browser = webdriver.Chrome(executable_path="chromedriver", options=options)
         browser.implicitly_wait(10)
-        # browser.minimize_window()
         browser.get("https://q.utoronto.ca")
         self.driver = browser
 
@@ -41,19 +41,44 @@ class EvalPage:
         self.select("#login-btn").click()
 
         # entering course evaluation pages
-        self.select("#context_external_tool_2015_menu_item").click()
+        self.select("#context_external_tool_2015_menu_item a").click()
         self.select("#section-tabs > li:nth-child(3)").click()
         WebDriverWait(self.driver, 10).until(
             EC.frame_to_be_available_and_switch_to_it((By.CSS_SELECTOR, "iframe[id*='tool_content']"))
         )
-        self.select("#launcherElements tbody > tr:nth-child(3) a").click()
-        self.driver.switch_to.window(self.driver.window_handles[1])
+        link = self.select("#launcherElements tbody > tr:nth-child(3) a").get_attribute("href")
+        self.driver.close()
+        return link
+
+
+class EvalPage(WebPage):
+    """A webdriver instance to scrape review from UofT evaluation page"""
+
+    def __init__(self, url: str, max_records: int = 10) -> None:
+        """
+        Initialize an evaluation page in a chrome browser and configure it.
+        max_page is the maximum number of items to display at once.
+        If webdriver exit with error, try to start webdriver in headful mode
+
+        Preconditions:
+          - max_records in [5, 10, 15, 20, 25, 50, 100]
+        """
+
+        # initialize a google chrome browser
+        options = Options()
+        options.add_argument("--headless")
+        browser = webdriver.Chrome(executable_path="chromedriver", options=options)
+        browser.implicitly_wait(10)
+        browser.get(url)
+        self.driver = browser
+        self.wait()
 
         # set the maximum number of items to the specified value
         mapping = {5: "0", 10: "1", 15: "2", 20: "3", 25: "4", 50: "5", 100: "6"}
-        select = Select(self.select("#fbvGridPageSizeSelectBlock select"))
-        select.select_by_index(mapping[max_page])
-        self.wait()
+        if max_records != 10:
+            select = Select(self.select("#fbvGridPageSizeSelectBlock select"))
+            select.select_by_index(mapping[max_records])
+            self.wait()
 
     def get_num_records(self) -> int:
         """Return the total number of records of evaluations"""
@@ -63,13 +88,9 @@ class EvalPage:
         """Return the total number of pages"""
         return int(self.select("#fbvGridPagingContentHolderLvl1 tbody>tr:nth-child(1)>td:nth-child(5)").text.strip())
 
-    def select(self, css_selector: str) -> WebElement:
-        """Select the specified html element"""
-        return self.driver.find_element(By.CSS_SELECTOR, css_selector)
-
     def wait(self) -> None:
         """Wait until the datais loaded"""
-        WebDriverWait(self.driver, 600, 0.1).until_not(
+        WebDriverWait(self.driver, 600, 0.01).until_not(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#waitMachineID"))
         )
 
