@@ -53,10 +53,13 @@ def get_course_info_from_html(block: Tag) -> dict[str, str]:
     return course_data
 
 
-def scrape_course(save_dir: str = "") -> None:
+def scrape_course(save_dir: str = "", filename: str = "course.csv", lim: int = -1) -> None:
     """
     Scrape all the course information from the url specified.
     This method uses Beautiful Soup 4 to access DOM element in html.
+    
+    Preconditions:
+      - lim >= 1
     """
     url = "https://artsci.calendar.utoronto.ca/print/view/pdf/course_search/print_page/debug?page=1"
     html_content = get_url_html(url)
@@ -66,12 +69,16 @@ def scrape_course(save_dir: str = "") -> None:
     blocks = document.select(".no-break.w3-row.views-row")
 
     # Save the course information into csv
-    save_path = abspath(f"{save_dir}/course.csv")
+    save_path = abspath(f"{save_dir}/{filename}")
+    num_record_saved = 0
     with open(save_path, "w") as w:
         for block in blocks:
+            if num_record_saved >= lim and lim >= 1:
+                break
             course_data = get_course_info_from_html(block)
             order = ["code", 'name', 'prereq', 'coreq', 'breadth_req']
             w.write(f"{in_a_row(course_data, order, '|')}\n")
+            num_record_saved += 1
 
 
 if __name__ == "__main__":
@@ -84,4 +91,4 @@ if __name__ == "__main__":
     #     'max-nested-blocks': 4
     # })
 
-    scrape_course("dataset/")
+    scrape_course("dataset/", "course.csv")

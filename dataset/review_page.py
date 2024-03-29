@@ -26,6 +26,7 @@ class QuercusPage(WebPage):
     """A webdriver instance to login Quercus and find the link of evaluation page"""
 
     def get_link(self, utorid: str, passwd: str) -> str:
+        """Get the link for evaluation page"""
         # initialize a google chrome browser
         options = Options()
         options.add_argument("--headless")
@@ -53,14 +54,14 @@ class QuercusPage(WebPage):
 class EvalPage(WebPage):
     """A webdriver instance to scrape review from UofT evaluation page"""
 
-    def __init__(self, url: str, max_page: int = 10) -> None:
+    def __init__(self, url: str, max_records: int = 10) -> None:
         """
         Initialize an evaluation page in a chrome browser and configure it.
         max_page is the maximum number of items to display at once.
         If webdriver exit with error, try to start webdriver in headful mode
 
         Preconditions:
-          - max_page in [5, 10, 15, 20, 25, 50, 100]
+          - max_records in [5, 10, 15, 20, 25, 50, 100]
         """
 
         # initialize a google chrome browser
@@ -74,9 +75,10 @@ class EvalPage(WebPage):
 
         # set the maximum number of items to the specified value
         mapping = {5: "0", 10: "1", 15: "2", 20: "3", 25: "4", 50: "5", 100: "6"}
-        select = Select(self.select("#fbvGridPageSizeSelectBlock select"))
-        select.select_by_index(mapping[max_page])
-        self.wait()
+        if max_records != 10:
+            select = Select(self.select("#fbvGridPageSizeSelectBlock select"))
+            select.select_by_index(mapping[max_records])
+            self.wait()
 
     def get_num_records(self) -> int:
         """Return the total number of records of evaluations"""
@@ -88,7 +90,7 @@ class EvalPage(WebPage):
 
     def wait(self) -> None:
         """Wait until the datais loaded"""
-        WebDriverWait(self.driver, 600, 0.1).until_not(
+        WebDriverWait(self.driver, 600, 0.01).until_not(
             EC.presence_of_element_located((By.CSS_SELECTOR, "#waitMachineID"))
         )
 
