@@ -39,7 +39,7 @@ from getpass import getpass
 from multiprocessing import Process, Manager
 from time import sleep
 from bs4 import BeautifulSoup, Tag
-from util import in_a_row, get_info_from_html
+from dataset_util import in_a_row, get_info_from_html
 from review_page import EvalPage, QuercusPage
 
 
@@ -200,12 +200,12 @@ def scrape_review(save_dir: str = "", filename: str = "review.csv", lim: int = -
 
 
 if __name__ == "__main__":
-    scrape_review("dataset/", "review_large.csv", lim=1600, max_records=100, process_num=12)
+    # scrape_review("dataset/", "review_large.csv", lim=1600, max_records=100, process_num=12)
 
-    # import python_ta
-    # python_ta.check_all(config={
-    #     'max-line-length': 120,
-    #     'extra-imports': ['bs4', 'util', 'os.path', 'time', 'multiprocessing', 'review_page', 'getpass'],
-    #     'allowed-io': ['scrape_review'],
-    #     'max-nested-blocks': 4
-    # })
+    import python_ta
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'extra-imports': ['bs4', 'dataset_util', 'os.path', 'time', 'multiprocessing', 'review_page', 'getpass'],
+        'allowed-io': ['scrape_review'],
+        'max-nested-blocks': 4
+    })
