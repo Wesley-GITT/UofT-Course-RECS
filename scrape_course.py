@@ -42,7 +42,7 @@ def get_course_info_from_html(block: Tag) -> dict[str, str]:
         # "recommended_prep": ".views-field-field-recommended .field-content",
         # "exclusions": ".views-field-field-exclusion .field-content",
         # "dist_req": ".views-field-field-distribution-requirements .field-content",
-        "breadth_req": ".views-label-field-breadth-requirements .field-content"
+        "breadth_req": ".views-field-field-breadth-requirements .field-content"
     }
 
     # Adjust some of the data
