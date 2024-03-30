@@ -194,12 +194,13 @@ class _Vertex:
             edge weights.
 
     Representation Invariants:
-        - self not in self.neighbours
-        - all(self in u.neighbours for u in self.neighbours)
+        - self not in self.neighbours.values()
+        - all(self in u.neighbours for u in self.neighbours.values())
         - self.kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
     """
     item: Any
     kind: str
+    neighbours: dict[int, _Vertex]
 
     def __init__(self, item: Any, kind: str) -> None:
         """Initialize a new vertex with the given item and kind.
@@ -325,7 +326,7 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
                 g.add_vertex(r2[3], "lecture")
                 g.add_vertex(int(r2[2][3:4]), "course_level")
                 g.add_edge(r2[2], r2[0])
-                g.add_edge(r2[2], r2[3])
+                g.add_edge(r2[2], r2[3], int(float(r2[16]) * 10))
                 g.add_edge(r2[2], int(r2[2][3:4]))
 
                 breadthreqs = courses_breadthreq_mapping[r2[2]]
