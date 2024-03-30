@@ -187,36 +187,43 @@ class _Vertex:
         - prerequisite: A list of string representing all prerequisite courses of this course
         - corequisite:  A list of string representing all corequisite courses of this course
         - breath_num: The breath_requirement number, in 12345
+        - course_lvl: this is the year of the course, for example csc111 is a year 1 course
         - neighbours: The vertices that are adjacent to this vertex, and their corresponding
             edge weights.
+        - course_scores: the list of course scores on the website store in a list
 
     Representation Invariants:
         - self not in self.neighbours
         - all(self in u.neighbours for u in self.neighbours)
-        - self.kind in {'user', 'course', 'programme', 'breath'}
+        - self.kind in {'course', 'programme', 'breath', course_level}
     """
     item: Any
     kind: str
     prerequisite: Optional[list[str]]
     corequisite: Optional[list[str]]
     breath_num: Optional[set[int]]
+    course_lvl: Optional[int]
+    course_scores: Optional[list[float]]
     neighbours: dict[_Vertex, Union[int, float]]
 
-    def __init__(self, item: Any, kind: str, prerequisite: list[str], corequisite: list[str],
-                 breath_num: set[int]) -> None:
+    def __init__(self, item: Any, kind: str, prerequisite: Optional[list[str]],
+                 corequisite: Optional[list[str]], breath_num: Optional[set[int]],
+                 course_lvl: Optional[int], course_scores: Optional[list[float]]) -> None:
         """Initialize a new vertex with the given item and kind.
 
         This vertex is initialized with no neighbours.
 
         Preconditions:
-            - kind in {'user', 'book'}
+            - kind in {'course', 'programme', 'breath', course_level}
         """
         self.item = item
         self.kind = kind
         self.neighbours = {}
         self.prerequisite = prerequisite
         self.corequisite = corequisite
+        self.course_lvl = course_lvl
         self.breath_num = breath_num
+        self.course_scores = course_scores
 
     def degree(self) -> int:
         """Return the degree of this vertex."""
