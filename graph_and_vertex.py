@@ -264,22 +264,16 @@ class _Programme(_Vertex):
 class _Breadth_Req(_Vertex):
     """Your DOCSTRING"""
 
-    def __init__(self, item: str) -> None:
+    def __init__(self, item: int) -> None:
         """Your DOCSTRING"""
-        
-        breadth_req_mapping = {"Creative and Cultural Representations": 1,
-                               "Thought, Belief, and Behaviour": 2,
-                               "Society and Its Institutions": 3,
-                               "Living Things and Their Environment": 4,
-                               "The Physical and Mathematical Universes": 5}
 
-        super().__init__(breadth_req_mapping[item], "breadth_req")
+        super().__init__(item, "breadth_req")
 
 
 class _Course_Level(_Vertex):
     """Your DOCSTRING"""
 
-    def __init__(self, item: str) -> None:
+    def __init__(self, item: int) -> None:
         """Your DOCSTRING"""
         super().__init__(item, "course_level")
 
@@ -301,23 +295,42 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
     """
 
     g = Graph()
-    courses_breath_req_mapping = {}
+    breadthreq_mapping = {"creative and cultural representations (1)": 1,
+                           "thought, belief, and behaviour (2)": 2,
+                           "society and its institutions (3)": 3,
+                           "living things and their environment (4)": 4,
+                           "the physical and mathematical universes (5)": 5}
+
+    courses_breadthreq_mapping = {}
 
     with open(course_file, 'r') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, delimiter="|")
 
         for r1 in reader:
-            # courses_breath_req_mapping[r1[0]] = r1[]
+            lst = []
+            breadthreqs = r1[4].split(",")
+            for breadthreq in breadthreqs:
+                breadthreq = breadthreq.strip().lower()
+                if breadthreq in breadthreq_mapping:
+                    lst.append(breadthreq_mapping[breadthreq])
+            courses_breadthreq_mapping[r1[0]] = lst
 
     with open(reviews_file, 'r') as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, delimiter=":")
 
         for r2 in reader:
-            if r2[2] in courses_breath_req_mapping:
+            if r2[2] in courses_breadthreq_mapping:
                 g.add_vertex(r2[2], "course")
                 g.add_vertex(r2[0], "programme")
                 g.add_vertex(r2[3], "lecture")
                 g.add_vertex(r2[2][3:4], "course_level")
-                g.add_vertex(r2[2], "breadth_req")             
+                g.add_edge(r2[2], r2[0])
+                g.add_edge(r2[2], r2[3])
+                g.add_edge(r2[2], r2[2][3:4])
+
+                breadthreqs = courses_breadthreq_mapping[r2[2]]
+                for breadthreq in breadthreqs:
+                    g.add_vertex(breadthreq, "breadth_req")
+                    g.add_edge(r2[2], breadthreq)
 
     return g
