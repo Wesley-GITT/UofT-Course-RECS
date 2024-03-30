@@ -1,5 +1,5 @@
 from __future__ import annotations
-# import csv
+import csv
 from typing import Any, Union, Optional
 
 
@@ -22,7 +22,13 @@ class Graph:
         """Add a vertex with the given item and kind to this graph.
         """
         if item not in self._vertices:
-            self._vertices[item] = _Vertex(item, kind)
+            mapping = {"course": _Course, "programme": _Programme,
+                       "course_level": _Course_Level, "breadth_req": _Breadth_Req,
+                       "lecture": _Lecture}
+            if kind in mapping:
+                self._vertices[item] = mapping[kind](item)
+            else:
+                self._vertices[item] = _Vertex(item, kind)
 
     def add_edge(self, item1: Any, item2: Any, weight: Union[int, float] = 1) -> None:
         """Add an edge between the two vertices with the given items in this graph,
@@ -183,48 +189,133 @@ class _Vertex:
 
     Instance Attributes:
         - item: The data stored in this vertex, representing a user or course.
-        - kind: The type of this vertex: 'user' or 'course'.
-        - prerequisite: A list of string representing all prerequisite courses of this course
-        - corequisite:  A list of string representing all corequisite courses of this course
-        - breath_num: The breath_requirement number, in 12345
-        - course_lvl: this is the year of the course, for example csc111 is a year 1 course
+        - kind: The type of this vertex: 'course', 'programme', 'breath', 'course_level'.
         - neighbours: The vertices that are adjacent to this vertex, and their corresponding
             edge weights.
-        - course_scores: the list of course scores on the website store in a list
 
     Representation Invariants:
         - self not in self.neighbours
         - all(self in u.neighbours for u in self.neighbours)
-        - self.kind in {'course', 'programme', 'breath', course_level}
+        - self.kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
     """
     item: Any
     kind: str
-    prerequisite: Optional[list[str]]
-    corequisite: Optional[list[str]]
-    breath_num: Optional[set[int]]
-    course_lvl: Optional[int]
-    course_scores: Optional[list[float]]
-    neighbours: dict[_Vertex, Union[int, float]]
 
-    def __init__(self, item: Any, kind: str, prerequisite: Optional[list[str]],
-                 corequisite: Optional[list[str]], breath_num: Optional[set[int]],
-                 course_lvl: Optional[int], course_scores: Optional[list[float]]) -> None:
+    def __init__(self, item: Any, kind: str) -> None:
         """Initialize a new vertex with the given item and kind.
 
         This vertex is initialized with no neighbours.
 
         Preconditions:
-            - kind in {'course', 'programme', 'breath', course_level}
+            - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
         """
         self.item = item
         self.kind = kind
         self.neighbours = {}
-        self.prerequisite = prerequisite
-        self.corequisite = corequisite
-        self.course_lvl = course_lvl
-        self.breath_num = breath_num
-        self.course_scores = course_scores
 
     def degree(self) -> int:
         """Return the degree of this vertex."""
         return len(self.neighbours)
+
+
+    def get_neighbours(self, kind = "") -> int:
+        """Return neighbours of kind specified
+        
+        Preconditions:
+          - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture', ''}
+        """
+
+        if kind == "":
+            return self.neighbours
+        else:
+            return {n for n in self.neighbours.values() if n.kind == kind}
+
+
+class _Course(_Vertex):
+    '''Your DOCSTRING'''
+
+    prerequisite = list[str]
+    corequisite: list[str]
+
+    def __init__(self, item: str) -> None:
+        '''Your DOCSTRING'''
+        super().__init__(item, "course")
+
+
+class _Lecture(_Vertex):
+    '''Your DOCSTRING'''
+
+    prerequisite = list[str]
+    corequisite: list[str]
+
+    def __init__(self, item: str) -> None:
+        '''Your DOCSTRING'''
+
+        super().__init__(item, "course")
+
+
+class _Programme(_Vertex):
+    '''Your DOCSTRING'''
+
+    def __init__(self, item: str) -> None:
+        '''Your DOCSTRING'''
+        super().__init__(item, "programme")
+
+
+class _Breadth_Req(_Vertex):
+    '''Your DOCSTRING'''
+
+    def __init__(self, item: str) -> None:
+        '''Your DOCSTRING'''
+        super().__init__(item, "breadth_req")
+
+
+class _Course_Level(_Vertex):
+    '''Your DOCSTRING'''
+
+    def __init__(self, item: str) -> None:
+        '''Your DOCSTRING'''
+        super().__init__(item, "course_level")
+
+
+class Req:
+    """Prerequisite or corequisite"""
+    
+
+    def __init__(self, req: str) -> None:
+        """Analyse the requisite string and store it"""
+
+
+def load_graph(reviews_file: str, course_file: str) -> Graph:
+    """Return a course review graph corresponding to the given datasets.
+
+    Preconditions:
+        - reviews_file is the path to a CSV file corresponding to the book review data
+          format described on the assignment handout
+        - course_file is the path to a CSV file corresponding to the book data
+          format described on the assignment handout
+
+    >>> g = load_review_graph('data/review_small.csv', 'data/course.csv')
+    >>> len(g.get_all_vertices(kind='course'))
+    <?>
+    >>> len(g.get_all_vertices(kind='lecture'))
+    <?>
+    """
+    
+    g = Graph()
+    course_prerequisite_mapping = {}
+    course_corequisite_mapping = {}
+
+    with open(course_file, 'r') as f:
+        reader = csv.reader(f)
+
+        for r1 in reader:
+            courses.append[r1[0]]
+
+    with open(reviews_file, 'r') as f:
+        reader = csv.reader(f)
+
+        for r2 in reader:
+            if r2[]
+
+    return g
