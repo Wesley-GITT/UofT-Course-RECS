@@ -323,10 +323,10 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
                 g.add_vertex(r2[2], "course")
                 g.add_vertex(r2[0], "programme")
                 g.add_vertex(r2[3], "lecture")
-                g.add_vertex(r2[2][3:4], "course_level")
+                g.add_vertex(int(r2[2][3:4]), "course_level")
                 g.add_edge(r2[2], r2[0])
                 g.add_edge(r2[2], r2[3])
-                g.add_edge(r2[2], r2[2][3:4])
+                g.add_edge(r2[2], int(r2[2][3:4]))
 
                 breadthreqs = courses_breadthreq_mapping[r2[2]]
                 for breadthreq in breadthreqs:
