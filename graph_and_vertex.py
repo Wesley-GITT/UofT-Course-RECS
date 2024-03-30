@@ -232,10 +232,9 @@ class _Vertex:
 
 
 class _Course(_Vertex):
-    '''Your DOCSTRING'''
+    """Your DOCSTRING"""
 
-    prerequisite = list[str]
-    corequisite: list[str]
+    details = ""
 
     def __init__(self, item: str) -> None:
         '''Your DOCSTRING'''
@@ -243,47 +242,46 @@ class _Course(_Vertex):
 
 
 class _Lecture(_Vertex):
-    '''Your DOCSTRING'''
+    """Your DOCSTRING"""
 
     prerequisite = list[str]
     corequisite: list[str]
 
     def __init__(self, item: str) -> None:
-        '''Your DOCSTRING'''
+        """Your DOCSTRING"""
 
         super().__init__(item, "course")
 
 
 class _Programme(_Vertex):
-    '''Your DOCSTRING'''
+    """Your DOCSTRING"""
 
     def __init__(self, item: str) -> None:
-        '''Your DOCSTRING'''
+        """Your DOCSTRING"""
         super().__init__(item, "programme")
 
 
 class _Breadth_Req(_Vertex):
-    '''Your DOCSTRING'''
+    """Your DOCSTRING"""
 
     def __init__(self, item: str) -> None:
-        '''Your DOCSTRING'''
-        super().__init__(item, "breadth_req")
+        """Your DOCSTRING"""
+        
+        breadth_req_mapping = {"Creative and Cultural Representations": 1,
+                               "Thought, Belief, and Behaviour": 2,
+                               "Society and Its Institutions": 3,
+                               "Living Things and Their Environment": 4,
+                               "The Physical and Mathematical Universes": 5}
+
+        super().__init__(breadth_req_mapping[item], "breadth_req")
 
 
 class _Course_Level(_Vertex):
-    '''Your DOCSTRING'''
+    """Your DOCSTRING"""
 
     def __init__(self, item: str) -> None:
-        '''Your DOCSTRING'''
+        """Your DOCSTRING"""
         super().__init__(item, "course_level")
-
-
-class Req:
-    """Prerequisite or corequisite"""
-    
-
-    def __init__(self, req: str) -> None:
-        """Analyse the requisite string and store it"""
 
 
 def load_graph(reviews_file: str, course_file: str) -> Graph:
@@ -301,21 +299,25 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
     >>> len(g.get_all_vertices(kind='lecture'))
     <?>
     """
-    
+
     g = Graph()
-    course_prerequisite_mapping = {}
-    course_corequisite_mapping = {}
+    courses_breath_req_mapping = {}
 
     with open(course_file, 'r') as f:
         reader = csv.reader(f)
 
         for r1 in reader:
-            courses.append[r1[0]]
+            # courses_breath_req_mapping[r1[0]] = r1[]
 
     with open(reviews_file, 'r') as f:
         reader = csv.reader(f)
 
         for r2 in reader:
-            if r2[]
+            if r2[2] in courses_breath_req_mapping:
+                g.add_vertex(r2[2], "course")
+                g.add_vertex(r2[0], "programme")
+                g.add_vertex(r2[3], "lecture")
+                g.add_vertex(r2[2][3:4], "course_level")
+                g.add_vertex(r2[2], "breadth_req")             
 
     return g
