@@ -74,7 +74,7 @@ class EvalPage(WebPage):
         self.wait()
 
         # set the maximum number of items to the specified value
-        mapping = {5: "0", 10: "1", 15: "2", 20: "3", 25: "4", 50: "5", 100: "6"}
+        mapping = {5: 0, 10: 1, 15: 2, 20: 3, 25: 4, 50: 5, 100: 6}
         if max_records != 10:
             select = Select(self.select("#fbvGridPageSizeSelectBlock select"))
             select.select_by_index(mapping[max_records])

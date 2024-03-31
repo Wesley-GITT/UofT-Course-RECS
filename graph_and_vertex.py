@@ -21,14 +21,9 @@ class Graph:
     def add_vertex(self, item: Any, kind: str) -> None:
         """Add a vertex with the given item and kind to this graph.
         """
-        if item not in self._vertices:
-            mapping = {"course": _Course, "programme": _Programme,
-                       "course_level": _Course_Level, "breadth_req": _Breadth_Req,
-                       "lecture": _Lecture}
-            if kind in mapping:
-                self._vertices[item] = mapping[kind](item)
-            else:
-                self._vertices[item] = _Vertex(item, kind)
+        mapping = ["course", "programme", "course_level", "breadth_req", "lecture"]
+        if item not in self._vertices and kind in mapping:
+            self._vertices[item] = _Vertex(item, kind)
 
     def add_edge(self, item1: Any, item2: Any, weight: Union[int, float] = 1) -> None:
         """Add an edge between the two vertices with the given items in this graph,
@@ -231,6 +226,7 @@ class _Vertex:
     """
     item: Any
     kind: str
+    neighbours: dict[_Vertex, Union[int, float]]
 
     def __init__(self, item: Any, kind: str) -> None:
         """Initialize a new vertex with the given item and kind.
@@ -256,58 +252,12 @@ class _Vertex:
           - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture', ''}
         """
 
+        self.detail = ""
+
         if kind == "":
             return self.neighbours
         else:
             return {n for n in self.neighbours.values() if n.kind == kind}
-
-
-class _Course(_Vertex):
-    """Your DOCSTRING"""
-
-    details = ""
-
-    def __init__(self, item: str) -> None:
-        """Your DOCSTRING"""
-        super().__init__(item, "course")
-        self.review_scores = []
-
-
-class _Lecture(_Vertex):
-    """Your DOCSTRING"""
-
-    prerequisite = list[str]
-    corequisite: list[str]
-
-    def __init__(self, item: str) -> None:
-        """Your DOCSTRING"""
-
-        super().__init__(item, "course")
-
-
-class _Programme(_Vertex):
-    """Your DOCSTRING"""
-
-    def __init__(self, item: str) -> None:
-        """Your DOCSTRING"""
-        super().__init__(item, "programme")
-
-
-class _Breadth_Req(_Vertex):
-    """Your DOCSTRING"""
-
-    def __init__(self, item: int) -> None:
-        """Your DOCSTRING"""
-
-        super().__init__(item, "breadth_req")
-
-
-class _Course_Level(_Vertex):
-    """Your DOCSTRING"""
-
-    def __init__(self, item: int) -> None:
-        """Your DOCSTRING"""
-        super().__init__(item, "course_level")
 
 
 def load_graph(reviews_file: str, course_file: str) -> Graph:
@@ -347,80 +297,20 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
 
         for r2 in reader:
             if r2[2] in courses_breadthreq_mapping:
-                course_code = r2[2]
-                programme_code = r2[0]
-                lecture_code = r2[3]
-                course_level = int(course_code[3:4])
-                g.add_vertex(course_code, "course")
-                g.add_vertex(programme_code, "programme")
-                g.add_vertex(lecture_code, "lecture")
-                g.add_vertex(course_level, "course_level")
+                g.add_vertex(r2[2], "course")
+                g.add_vertex(r2[0], "programme")
+                g.add_vertex(r2[3], "lecture")
+                g.add_vertex(int(r2[2][3:4]), "course_level")
+                g.add_edge(r2[2], r2[0])
+                g.add_edge(r2[2], r2[3])
+                g.add_edge(r2[2], int(r2[2][3:4]))
 
-                g.add_edge(course_code, programme_code)
-                g.add_edge(course_code, lecture_code)
-                g.add_edge(course_code, course_level)
-
-                review_scores = [float(score) for score in r2[8:19]]
-
-                if course_code in g._vertices and isinstance(g._vertices[course_code], _Course):
-                    g._vertices[course_code].review_scores.append(review_scores)
-
-                if course_code in courses_breadthreq_mapping:
-                    breadthreqs = courses_breadthreq_mapping[course_code]
-                    for breadthreq in breadthreqs:
-                        g.add_vertex(breadthreq, "breadth_req")
-                        g.add_edge(course_code, breadthreq)
+                breadthreqs = courses_breadthreq_mapping[r2[2]]
+                for breadthreq in breadthreqs:
+                    g.add_vertex(breadthreq, "breadth_req")
+                    g.add_edge(r2[2], breadthreq)
 
     return g
 
-# def load_graph(reviews_file: str, course_file: str) -> Graph:
-#     """Return a course review graph corresponding to the given datasets.
-#
-#     Preconditions:
-#         - reviews_file is the path to a CSV file corresponding to the book review data
-#           format described on the assignment handout
-#         - course_file is the path to a CSV file corresponding to the book data
-#           format described on the assignment handout
-#
-#     """
-#
-#     g = Graph()
-#     breadthreq_mapping = {"creative and cultural representations (1)": 1,
-#                           "thought, belief, and behaviour (2)": 2,
-#                           "society and its institutions (3)": 3,
-#                           "living things and their environment (4)": 4,
-#                           "the physical and mathematical universes (5)": 5}
-#
-#     courses_breadthreq_mapping = {}
-#
-#     with open(course_file, 'r') as f:
-#         reader = csv.reader(f, delimiter="|")
-#
-#         for r1 in reader:
-#             lst = []
-#             breadthreqs = r1[4].split(",")
-#             for breadthreq in breadthreqs:
-#                 breadthreq = breadthreq.strip().lower()
-#                 if breadthreq in breadthreq_mapping:
-#                     lst.append(breadthreq_mapping[breadthreq])
-#             courses_breadthreq_mapping[r1[0]] = lst
-#
-#     with open(reviews_file, 'r') as f:
-#         reader = csv.reader(f, delimiter=":")
-#
-#         for r2 in reader:
-#             if r2[2] in courses_breadthreq_mapping:
-#                 g.add_vertex(r2[2], "course")
-#                 g.add_vertex(r2[0], "programme")
-#                 g.add_vertex(r2[3], "lecture")
-#                 g.add_vertex(int(r2[2][3:4]), "course_level")
-#                 g.add_edge(r2[2], r2[0])
-#                 g.add_edge(r2[2], r2[3])
-#                 g.add_edge(r2[2], int(r2[2][3:4]))
-#
-#                 breadthreqs = courses_breadthreq_mapping[r2[2]]
-#                 for breadthreq in breadthreqs:
-#                     g.add_vertex(breadthreq, "breadth_req")
-#                     g.add_edge(r2[2], breadthreq)
-#
-#     return g
+if __name__ == "__main__":
+    g = load_graph("dataset/review_small.csv", "dataset/course.csv")
