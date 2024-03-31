@@ -76,97 +76,128 @@ class Graph:
     def calculate_review_score(self, course: Any) -> int | float:
         """Calculate the average review score for a given course based on reviews from all users.
         """
-        if course not in self._vertices:
+        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
             return 0
-
         course_vertex = self._vertices[course]
-        total_score = 0
-        num_of_review = 0
-
-        for neighbour, weight in course_vertex.neighbours.items():
-            if neighbour.kind == 'user':
-                total_score += weight
-                num_of_review += 1
-
-        average_score = total_score / num_of_review if num_of_review != 0 else 0.0
-
-        return average_score
-
-    def calculate_breath_score(self, course: Any) -> int | float:
-        """Calculate the breadth score for a given course based on the alignment of breadth requirement
-        numbers with other courses in the graph.
-        """
-        if course not in self._vertices or not self._vertices[course].breath_num:
+        if not course_vertex.review_scores:
             return 0
+        total_score = sum(course_vertex.review_scores)
+        all_review_type = len(course_vertex.review_scores)
 
-        course_vertex = self._vertices[course]
-        breath_requirement = set(course_vertex.breath_num)
-        breath_score = 0
-
-        for course_item, course_vertex in self._vertices.items():
-            if course_vertex.kind == 'course' and course_item != course:
-                shared_breath = breath_requirement.intersection(set(course_vertex.breath_num))
-                if shared_breath:
-                    breath_score += len(shared_breath)
-
-        return breath_score
-
-    def calculate_program_score(self, course: Any, program: str) -> int | float:
-        """Calculate the program score for a given course based on its connections to program vertices.
-        """
-        if course not in self._vertices:
-            return 0
-
-        course_vertex = self._vertices[course]
-
-        if any(neighbour.item == program for neighbour in course_vertex.neighbours if neighbour.kind == 'programme'):
-            program_score = 1
-        else:
-            program_score = 0
-
-        return program_score
+        return total_score / all_review_type
 
     def calculate_pre_cor_score(self, course: Any, student_completed_courses: list[str]) -> int | float:
         """Calculate a score for a given course based on the alignment of its prerequisites with courses
          a student has completed and the presence of corequisites.
         """
-        if course not in self._vertices:
+        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
             return 0
         course_vertex = self._vertices[course]
-        pre_score = 0
-        cor_score = 0
+        input_course_lecture = course_vertex.get_neighbours(kind='lecture')
+        pre_cor_score = 0
+        input_course_pre_cor = set()
 
-        if course_vertex.prerequisite:
-            matched_pre = [pre for pre in course_vertex.prerequisite if pre in student_completed_courses]
-            pre_score = len(matched_pre) / len(course_vertex.prerequisite) if course_vertex.prerequisite else 0
+        for lecture_vertex in input_course_lecture:
+            input_course_pre_cor.update(lecture_vertex.prerequisite)
+            input_course_pre_cor.update(lecture_vertex.corequisite)
 
-        if course_vertex.corequisite:
-            cor_score = len(course_vertex.corequisite) / (len(course_vertex.corequisite) + 1)
+        relevant_input_pre_cor = input_course_pre_cor.intersection(set(student_completed_courses))
 
-        return (pre_score + cor_score) / 2
+        for other_course_item, other_course_vertex in self._vertices.items():
+            if other_course_vertex.kind == 'course' and other_course_item != course:
+                other_lectures = other_course_vertex.get_neighbours(kind='lecture')
+                other_pre_cor = set()
+                for lecture_vertex in other_lectures:
+                    other_pre_cor.update(lecture_vertex.prerequisite)
+                    other_pre_cor.update(lecture_vertex.corequisite)
+                    overlap = relevant_input_pre_cor.intersection(other_pre_cor)
+                    if overlap:
+                        pre_cor_score += len(overlap)
+        return pre_cor_score
 
-    def compute_total_score(self, course: Any, program: str, student_completed_courses: list[str]):
+    def calculate_program_score(self, course: Any) -> int | float:
+        """Calculate the program score for a given course based on its connections to program vertices.
+        """
+        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
+            return 0
+
+        program_score = 0
+        program_for_course = self._vertices[course].get_neighbours(kind='programme')
+
+        for other_course_item, other_course_vertex in self._vertices.items():
+            if other_course_vertex.kind == 'course' and other_course_item != course:
+                other_course_program = other_course_vertex.get_neighbours(kind='programme')
+                shared_program = program_for_course.intersection(other_course_program)
+                if shared_program:
+                    program_score += 1
+
+        return program_score
+
+    def calculate_breadth_score(self, course: Any) -> int | float:
+        """Calculate the breadth score for a given course based on the alignment of breadth requirement
+        numbers with other courses in the graph.
+        """
+        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
+            return 0
+
+        breadth_score = 0
+        breadth_reqs_for_course = self._vertices[course].get_neighbours(kind='breadth_req')
+
+        for other_course_item, other_course_vertex in self._vertices.items():
+            if other_course_vertex.kind == 'course' and other_course_item != course:
+                other_course_breadth_reqs = other_course_vertex.get_neighbours(kind='breadth_req')
+                shared_breadth = breadth_reqs_for_course.intersection(other_course_breadth_reqs)
+                if shared_breadth:
+                    breadth_score += 1
+
+        return breadth_score
+
+    def calculate_course_level_score(self, course: Any) -> int | float:
+        """Calculate score based on course level alignment."""
+        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
+            return 0
+        course_level_vertices = [n for n in self._vertices[course].get_neighbours(kind='course_level')]
+        if len(course_level_vertices) != 1:
+            return 0
+        input_level = course_level_vertices[0].item
+        level_score = 0
+
+        for other_course_item, other_course_vertex in self._vertices.items():
+            if other_course_vertex.kind == 'course' and other_course_item != course:
+                other_level_vertices = [n for n in other_course_vertex.get_neighbours(kind='course_level')]
+                if len(other_level_vertices) != 1:
+                    continue
+                other_level = other_level_vertices[0].item
+                if input_level == other_level or (input_level != 4 and input_level + 1 == other_level):
+                    level_score += 1
+
+        return level_score
+
+    def compute_total_score(self, course: Any, student_completed_courses: list[str]) -> int | float:
         """Compute the total score for a given course, combining review, breadth, programme, and
         prerequisite/corequisite scores.
         """
-        weight_review = 0.3
+        weight_review = 0.1
+        weight_pre_cor = 0.3
+        weight_program = 0.2
         weight_breadth = 0.2
-        weight_program = 0.3
-        weight_pre_cor = 0.2
+        weight_level = 0.2
 
         review_score = self.calculate_review_score(course)
-        breadth_score = self.calculate_breath_score(course)
-        program_score = self.calculate_program_score(course, program)
         pre_cor_score = self.calculate_pre_cor_score(course, student_completed_courses)
+        program_score = self.calculate_program_score(course)
+        breadth_score = self.calculate_breadth_score(course)
+        level_score = self.calculate_course_level_score(course)
 
         total_score = (review_score * weight_review +
-                       breadth_score * weight_breadth +
+                       pre_cor_score * weight_pre_cor +
                        program_score * weight_program +
-                       pre_cor_score * weight_pre_cor)
+                       breadth_score * weight_breadth +
+                       level_score * weight_level)
 
         return total_score
 
-    def recommend_courses(self, input_courses: list[str], input_program: str) -> dict[str, list[str]]:
+    def recommend_courses(self, input_courses: list[str], student_completed_courses: list[str]) -> dict[str, list[str]]:
         """Recommend three courses for each course the user has input, there will also be a focus on the program
         user input
         """
@@ -176,7 +207,7 @@ class Graph:
             score = {}
             for other_courses in self.get_all_vertices('course'):
                 if other_courses not in input_courses:
-                    total_score = self.compute_total_score(other_courses, input_program, input_courses)
+                    total_score = self.compute_total_score(other_courses, student_completed_courses)
                     score[other_courses] = total_score
             top_3_recommendations = sorted(score, key=score.get, reverse=True)[:3]
             recommendations[course] = top_3_recommendations
@@ -194,13 +225,12 @@ class _Vertex:
             edge weights.
 
     Representation Invariants:
-        - self not in self.neighbours.values()
-        - all(self in u.neighbours for u in self.neighbours.values())
+        - self not in self.neighbours
+        - all(self in u.neighbours for u in self.neighbours)
         - self.kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
     """
     item: Any
     kind: str
-    neighbours: dict[int, _Vertex]
 
     def __init__(self, item: Any, kind: str) -> None:
         """Initialize a new vertex with the given item and kind.
@@ -210,6 +240,7 @@ class _Vertex:
         Preconditions:
             - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
         """
+        self.review_scores = []
         self.item = item
         self.kind = kind
         self.neighbours = {}
@@ -218,10 +249,9 @@ class _Vertex:
         """Return the degree of this vertex."""
         return len(self.neighbours)
 
-
-    def get_neighbours(self, kind = "") -> int:
+    def get_neighbours(self, kind="") -> dict[Any, Any] | set[Any]:
         """Return neighbours of kind specified
-        
+
         Preconditions:
           - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture', ''}
         """
@@ -238,8 +268,9 @@ class _Course(_Vertex):
     details = ""
 
     def __init__(self, item: str) -> None:
-        '''Your DOCSTRING'''
+        """Your DOCSTRING"""
         super().__init__(item, "course")
+        self.review_scores = []
 
 
 class _Lecture(_Vertex):
@@ -288,19 +319,14 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
         - course_file is the path to a CSV file corresponding to the book data
           format described on the assignment handout
 
-    >>> g = load_review_graph('data/review_small.csv', 'data/course.csv')
-    >>> len(g.get_all_vertices(kind='course'))
-    <?>
-    >>> len(g.get_all_vertices(kind='lecture'))
-    <?>
     """
 
     g = Graph()
     breadthreq_mapping = {"creative and cultural representations (1)": 1,
-                           "thought, belief, and behaviour (2)": 2,
-                           "society and its institutions (3)": 3,
-                           "living things and their environment (4)": 4,
-                           "the physical and mathematical universes (5)": 5}
+                          "thought, belief, and behaviour (2)": 2,
+                          "society and its institutions (3)": 3,
+                          "living things and their environment (4)": 4,
+                          "the physical and mathematical universes (5)": 5}
 
     courses_breadthreq_mapping = {}
 
@@ -321,17 +347,80 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
 
         for r2 in reader:
             if r2[2] in courses_breadthreq_mapping:
-                g.add_vertex(r2[2], "course")
-                g.add_vertex(r2[0], "programme")
-                g.add_vertex(r2[3], "lecture")
-                g.add_vertex(int(r2[2][3:4]), "course_level")
-                g.add_edge(r2[2], r2[0])
-                g.add_edge(r2[2], r2[3], int(float(r2[16]) * 10))
-                g.add_edge(r2[2], int(r2[2][3:4]))
+                course_code = r2[2]
+                programme_code = r2[0]
+                lecture_code = r2[3]
+                course_level = int(course_code[3:4])
+                g.add_vertex(course_code, "course")
+                g.add_vertex(programme_code, "programme")
+                g.add_vertex(lecture_code, "lecture")
+                g.add_vertex(course_level, "course_level")
 
-                breadthreqs = courses_breadthreq_mapping[r2[2]]
-                for breadthreq in breadthreqs:
-                    g.add_vertex(breadthreq, "breadth_req")
-                    g.add_edge(r2[2], breadthreq)
+                g.add_edge(course_code, programme_code)
+                g.add_edge(course_code, lecture_code)
+                g.add_edge(course_code, course_level)
+
+                review_scores = [float(score) for score in r2[8:19]]
+
+                if course_code in g._vertices and isinstance(g._vertices[course_code], _Course):
+                    g._vertices[course_code].review_scores.append(review_scores)
+
+                if course_code in courses_breadthreq_mapping:
+                    breadthreqs = courses_breadthreq_mapping[course_code]
+                    for breadthreq in breadthreqs:
+                        g.add_vertex(breadthreq, "breadth_req")
+                        g.add_edge(course_code, breadthreq)
 
     return g
+
+# def load_graph(reviews_file: str, course_file: str) -> Graph:
+#     """Return a course review graph corresponding to the given datasets.
+#
+#     Preconditions:
+#         - reviews_file is the path to a CSV file corresponding to the book review data
+#           format described on the assignment handout
+#         - course_file is the path to a CSV file corresponding to the book data
+#           format described on the assignment handout
+#
+#     """
+#
+#     g = Graph()
+#     breadthreq_mapping = {"creative and cultural representations (1)": 1,
+#                           "thought, belief, and behaviour (2)": 2,
+#                           "society and its institutions (3)": 3,
+#                           "living things and their environment (4)": 4,
+#                           "the physical and mathematical universes (5)": 5}
+#
+#     courses_breadthreq_mapping = {}
+#
+#     with open(course_file, 'r') as f:
+#         reader = csv.reader(f, delimiter="|")
+#
+#         for r1 in reader:
+#             lst = []
+#             breadthreqs = r1[4].split(",")
+#             for breadthreq in breadthreqs:
+#                 breadthreq = breadthreq.strip().lower()
+#                 if breadthreq in breadthreq_mapping:
+#                     lst.append(breadthreq_mapping[breadthreq])
+#             courses_breadthreq_mapping[r1[0]] = lst
+#
+#     with open(reviews_file, 'r') as f:
+#         reader = csv.reader(f, delimiter=":")
+#
+#         for r2 in reader:
+#             if r2[2] in courses_breadthreq_mapping:
+#                 g.add_vertex(r2[2], "course")
+#                 g.add_vertex(r2[0], "programme")
+#                 g.add_vertex(r2[3], "lecture")
+#                 g.add_vertex(int(r2[2][3:4]), "course_level")
+#                 g.add_edge(r2[2], r2[0])
+#                 g.add_edge(r2[2], r2[3])
+#                 g.add_edge(r2[2], int(r2[2][3:4]))
+#
+#                 breadthreqs = courses_breadthreq_mapping[r2[2]]
+#                 for breadthreq in breadthreqs:
+#                     g.add_vertex(breadthreq, "breadth_req")
+#                     g.add_edge(r2[2], breadthreq)
+#
+#     return g
