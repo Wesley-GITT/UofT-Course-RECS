@@ -84,14 +84,13 @@ class Graph:
         mapping = {}
         all_courses = self.get_all_vertices("course")
         for _course in all_courses:
-            if _course == course:
-                continue
-
-            mapping[_course] = self.similarity_score(course, _course)
+            if _course != course:
+                new_score = self.similarity_score(course, _course)
+                mapping[_course] = new_score
 
         return mapping
 
-    def recommend_courses(self, courses: list[str], filter_programme: str = "", limit: int = 9) -> list[str]:
+    def recommend_courses(self, courses: list[str], filter_programme: str = "", limit: int = 3) -> list[str]:
         """Return a list of up to <limit> recommended courses based on similarity to the list of courses.
 
         Preconditions:
@@ -113,8 +112,6 @@ class Graph:
 
         for new_crs in course_score:
             if (new_crs[0:3] == filter_programme or filter_programme == "") and course_score[new_crs] != 0.0:
-                if len(recommended_course) >= limit:
-                    break
                 next_index = 0
                 for crs in recommended_course:
                     new_crs_score = course_score[new_crs]
@@ -125,7 +122,7 @@ class Graph:
 
                 recommended_course.insert(next_index, new_crs)
 
-        return recommended_course
+        return recommended_course[:limit]
 
 
 class _Vertex:
@@ -164,24 +161,13 @@ class _Vertex:
         return len(self.neighbours)
 
     def weighted_helper(self, other: _Vertex) -> float:
-        """Return the weight of between two vertex. 
+        """Return the weight between two vertex. 
         """
 
         if other in self.neighbours:
             return self.neighbours[other]
         else:
             return 0.0
-
-    def weighted_score(self, other: _Vertex, common: _Vertex) -> float:
-        """Return a similarity score between two vertex"""
-        score_weight_mapping = {"programme": 0.5,  "lecture": 0.2, "course_level": 0.2, "breadth_req": 0.1}
-        score_weight = 0.0
-        if common.kind in score_weight_mapping:
-            score_weight = score_weight_mapping[common.kind]
-
-        score1 = self.weighted_helper(common)
-        score2 = other.weighted_helper(common)
-        return (1.0 - abs(score1 - score2) / (score1 + score2)) * score_weight
 
     def get_similarity_score(self, other: _Vertex) -> float:
         """Return the weighted similarity score between this vertex and other.
@@ -192,28 +178,28 @@ class _Vertex:
         if len(self.neighbours) == 0 or len(other.neighbours) == 0:
             return 0.0
         else:
-            weighted_numerator = 0.0
+            numerator = 0.0
             v_union = set()
             for v1 in self.neighbours:
                 v_union.add(v1)
 
                 for v2 in other.neighbours:
                     if v1.item == v2.item:
-                       weighted_numerator += self.weighted_score(other, v1)
+                        numerator += 1.0
 
                     if v2 not in v_union:
                         v_union.add(v2)
 
-        return weighted_numerator / len(v_union)
-
+            return numerator / len(v_union)
 
 def review_score_sum(row: list) -> float:
     """Helper function of load_graph. Return a sum of review scores."""
     sum = 0
     for score in row[8:17]:
-        sum += float(score)
+        if score != "N/A":
+            sum += float(score)
 
-    return sum
+    return sum / 40
 
 
 def load_graph(reviews_file: str, course_file: str) -> Graph:
@@ -253,13 +239,17 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
 
         for r2 in reader:
             if r2[2] in courses_breadthreq_mapping:
-                g.add_vertex(r2[2], "course")
-                g.add_vertex(r2[2][0:3], "programme")
-                g.add_vertex(r2[3], "lecture")
-                g.add_vertex(int(r2[2][3:4]), "course_level")
-                g.add_edge(r2[2], r2[0])
-                g.add_edge(r2[2], r2[3], review_score_sum(r2))
-                g.add_edge(r2[2], int(r2[2][3:4]))
+                course = r2[2]
+                course_level = int(r2[2][3:4])
+                lecture = r2[2] + " " + r2[3]
+                programme = r2[2][0:3]
+                g.add_vertex(course, "course")
+                g.add_vertex(programme, "programme")
+                g.add_vertex(lecture, "lecture")
+                g.add_vertex(course_level, "course_level")
+                g.add_edge(course, programme)
+                g.add_edge(course, lecture, review_score_sum(r2))
+                g.add_edge(course, course_level)
 
                 breadthreqs = courses_breadthreq_mapping[r2[2]]
                 for breadthreq in breadthreqs:
@@ -269,6 +259,6 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
     return g
 
 if __name__ == "__main__":
-    g = load_graph("dataset/review_small.csv", "dataset/course.csv")
-    recs = g.recommend_courses(["ANA400H1"], limit=10)
+    g = load_graph("dataset/review_full.csv", "dataset/course.csv")
+    recs = g.recommend_courses(["CSC110Y1"], limit=10)
     print(recs)
