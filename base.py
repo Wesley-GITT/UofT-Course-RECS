@@ -21,7 +21,7 @@ class Graph:
     def add_vertex(self, item: Any, kind: str) -> None:
         """Add a vertex with the given item and kind to this graph.
         """
-        mapping = ["course", "programme", "course_level", "breadth_req", "lecture"]
+        mapping = ["course", "programme", "course_level", "breadth_req", "professor"]
         if item not in self._vertices and kind in mapping:
             self._vertices[item] = _Vertex(item, kind)
 
@@ -137,7 +137,7 @@ class _Vertex:
     Representation Invariants:
         - self not in self.neighbours
         - all(self in u.neighbours for u in self.neighbours)
-        - self.kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
+        - self.kind in {'course', 'programme', 'breadth_req', 'course_level', 'professor'}
     """
     item: Any
     kind: str
@@ -149,7 +149,7 @@ class _Vertex:
         This vertex is initialized with no neighbours.
 
         Preconditions:
-            - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture'}
+            - kind in {'course', 'programme', 'breadth_req', 'course_level', 'professor'}
         """
         self.review_scores = []
         self.item = item
@@ -160,7 +160,7 @@ class _Vertex:
         """Return the degree of this vertex."""
         return len(self.neighbours)
 
-    def weighted_helper(self, other: _Vertex) -> float:
+    def __weighted_helper(self, other: _Vertex) -> float:
         """Return the weight between two vertex. 
         """
 
@@ -184,7 +184,7 @@ class _Vertex:
                 v_union.add(v1)
 
                 for v2 in other.neighbours:
-                    if v1.item == v2.item:
+                    if v1.item == v2.item and self.__weighted_helper(v1) == other.__weighted_helper(v2):
                         numerator += 1.0
 
                     if v2 not in v_union:
@@ -241,14 +241,14 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
             if r2[2] in courses_breadthreq_mapping:
                 course = r2[2]
                 course_level = int(r2[2][3:4])
-                lecture = r2[2] + " " + r2[3]
+                professor = r2[4] + " " + r2[5]
                 programme = r2[2][0:3]
                 g.add_vertex(course, "course")
                 g.add_vertex(programme, "programme")
-                g.add_vertex(lecture, "lecture")
+                g.add_vertex(professor, "professor")
                 g.add_vertex(course_level, "course_level")
                 g.add_edge(course, programme)
-                g.add_edge(course, lecture, review_score_sum(r2))
+                g.add_edge(course, professor, review_score_sum(r2))
                 g.add_edge(course, course_level)
 
                 breadthreqs = courses_breadthreq_mapping[r2[2]]
@@ -260,5 +260,5 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
 
 if __name__ == "__main__":
     g = load_graph("dataset/review_full.csv", "dataset/course.csv")
-    recs = g.recommend_courses(["CSC110Y1"], limit=10)
+    recs = g.recommend_courses(["MAT223H1"], limit=10)
     print(recs)
