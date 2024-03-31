@@ -1,9 +1,8 @@
+"""Python file that contains graph and vertex class"""
+
 from __future__ import annotations
+from typing import Any, Union
 import csv
-from typing import Any, Union, Optional
-
-
-# import networkx as nx
 
 
 class Graph:
@@ -90,13 +89,12 @@ class Graph:
 
         return mapping
 
-    def recommend_courses(self, courses: list[str], filter_programme: str = "", limit: int = 3) -> list[str]:
+    def recommend_courses(self, courses: list[str], limit: int = 3) -> list[str]:
         """Return a list of up to <limit> recommended courses based on similarity to the list of courses.
 
         Preconditions:
             - All({course in self._vertices for course in courses})
             - All({self._vertices[course].kind == 'course' for course in courses})
-            - (filter_programme in self._vertices and self._vertices[filter_programme].kind == "programme") or filter_programme == ""
             - limit >= 1
         """
 
@@ -105,22 +103,23 @@ class Graph:
         for course in courses:
             course_score_mapping = self.get_course_similarity(course)
             for _course in course_score_mapping:
-                if _course not in courses:
-                    if _course not in course_score:
-                        course_score[_course] = 0.0
-                    course_score[_course] += course_score_mapping[_course]
+                if _course in courses:
+                    continue
+
+                if _course not in course_score:
+                    course_score[_course] = 0.0
+                course_score[_course] += course_score_mapping[_course]
 
         for new_crs in course_score:
-            if (new_crs[0:3] == filter_programme or filter_programme == "") and course_score[new_crs] != 0.0:
-                next_index = 0
-                for crs in recommended_course:
-                    new_crs_score = course_score[new_crs]
-                    crs_score = course_score[crs]
+            next_index = 0
+            for crs in recommended_course:
+                new_crs_score = course_score[new_crs]
+                crs_score = course_score[crs]
 
-                    if new_crs_score < crs_score or (new_crs_score == crs_score and new_crs > crs):
-                        next_index += 1
+                if new_crs_score < crs_score or (new_crs_score == crs_score and new_crs > crs):
+                    next_index += 1
 
-                recommended_course.insert(next_index, new_crs)
+            recommended_course.insert(next_index, new_crs)
 
         return recommended_course[:limit]
 
@@ -151,7 +150,6 @@ class _Vertex:
         Preconditions:
             - kind in {'course', 'programme', 'breadth_req', 'course_level', 'professor'}
         """
-        self.review_scores = []
         self.item = item
         self.kind = kind
         self.neighbours = {}
@@ -169,6 +167,18 @@ class _Vertex:
         else:
             return 0.0
 
+    def _similarity_score_helper(self, v1: _Vertex, other: _Vertex, v_n_and_u: list[set[_Vertex]], kind: str) -> None:
+        """Helper function of get similarity score"""
+        neighbours_set2 = set(n for n in other.neighbours if n.kind == kind)
+        v_n = v_n_and_u[0]
+        v_u = v_n_and_u[1]
+        for v2 in neighbours_set2:
+            if v1.item == v2.item and self.__weighted_helper(v1) == other.__weighted_helper(v2):
+                v_n.add(v1)
+
+            if v2 not in v_u:
+                v_u.add(v2)
+
     def get_similarity_score(self, other: _Vertex) -> float:
         """Return the weighted similarity score between this vertex and other.
 
@@ -178,36 +188,31 @@ class _Vertex:
         if len(self.neighbours) == 0 or len(other.neighbours) == 0:
             return 0.0
         else:
-            weight = {"programme": 0.5, "professor": 0.2, "breadth_req": 0.2, "course_level": 0.1}
+            weight = {"programme": 0.4, "professor": 0.2, "breadth_req": 0.2, "course_level": 0.2}
             for kind in weight:
-                v_intersection = set()
-                v_union = set()
+                v_n = set()
+                v_u = set()
                 neighbours_set1 = set(n for n in self.neighbours if n.kind == kind)
-                neighbours_set2 = set(n for n in other.neighbours if n.kind == kind)
                 for v1 in neighbours_set1:
-                    v_union.add(v1)
+                    v_u.add(v1)
+                    self._similarity_score_helper(v1, other, [v_n, v_u], kind)
 
-                    for v2 in neighbours_set2:
-                        if v1.item == v2.item and self.__weighted_helper(v1) == other.__weighted_helper(v2):
-                            v_intersection.add(v1)
-
-                        if v2 not in v_union:
-                            v_union.add(v2)
-
-                if len(v_union) != 0:
-                    weight[kind] *= len(v_intersection) / len(v_union)
+                if len(v_u) != 0:
+                    weight[kind] *= len(v_n) / len(v_u)
                 else:
                     weight[kind] = 0
+
             return sum(list(weight.values()))
+
 
 def review_score_sum(row: list) -> float:
     """Helper function of load_graph. Return a sum of review scores."""
-    sum = 0
+    sum_of_score = 0
     for score in row[8:17]:
         if score != "N/A":
-            sum += float(score)
+            sum_of_score += float(score)
 
-    return sum / 40
+    return sum_of_score / 40
 
 
 def load_graph(reviews_file: str, course_file: str) -> Graph:
@@ -228,45 +233,60 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
                           "living things and their environment (4)": 4,
                           "the physical and mathematical universes (5)": 5}
 
+    course_level_mapping = {
+        1: {"100": 10, "100/200": 15},
+        2: {"200": 20, "100/200": 15, "200/300": 25},
+        3: {"300": 30, "200/300": 25, "300/400": 35},
+        4: {"400": 40, "300/400": 35}
+    }
+
     courses_breadthreq_mapping = {}
 
     with open(course_file, 'r') as f:
         reader = csv.reader(f, delimiter="|")
 
-        for r1 in reader:
+        for row in reader:
             lst = []
-            breadthreqs = r1[4].split(",")
-            for breadthreq in breadthreqs:
-                breadthreq = breadthreq.strip().lower()
+            for breadthreq in row[4].split(","):
                 if breadthreq in breadthreq_mapping:
-                    lst.append(breadthreq_mapping[breadthreq])
-            courses_breadthreq_mapping[r1[0]] = lst
+                    lst.append(breadthreq_mapping[breadthreq.strip().lower()])
+            courses_breadthreq_mapping[row[0]] = lst
 
     with open(reviews_file, 'r') as f:
         reader = csv.reader(f, delimiter=":")
 
-        for r2 in reader:
-            if r2[2] in courses_breadthreq_mapping:
-                course = r2[2]
-                course_level = int(r2[2][3:4])
-                professor = r2[4] + " " + r2[5]
-                programme = r2[2][0:3]
-                g.add_vertex(course, "course")
-                g.add_vertex(programme, "programme")
-                g.add_vertex(professor, "professor")
-                g.add_vertex(course_level, "course_level")
-                g.add_edge(course, programme)
-                g.add_edge(course, professor, review_score_sum(r2))
-                g.add_edge(course, course_level)
+        for row in reader:
+            if row[2] in courses_breadthreq_mapping:
+                mapping = {
+                    "course": row[2],
+                    "course_level": int(row[2][3:4]),
+                    "professor": row[4] + " " + row[5],
+                    "programme": row[2][0:3]
+                }
+                g.add_vertex(mapping["course"], "course")
+                g.add_vertex(mapping["programme"], "programme")
+                g.add_vertex(mapping["professor"], "professor")
+                g.add_edge(mapping["course"], mapping["programme"])
+                g.add_edge(mapping["course"], mapping["professor"], review_score_sum(row))
 
-                breadthreqs = courses_breadthreq_mapping[r2[2]]
+                course_levels = course_level_mapping[mapping["course_level"]]
+                for crs_level_key in course_levels:
+                    g.add_vertex(crs_level_key, "course_level")
+                    g.add_edge(mapping["course"], crs_level_key, course_levels[crs_level_key])
+
+                breadthreqs = courses_breadthreq_mapping[mapping["course"]]
                 for breadthreq in breadthreqs:
                     g.add_vertex(breadthreq, "breadth_req")
-                    g.add_edge(r2[2], breadthreq)
+                    g.add_edge(mapping["course"], breadthreq)
 
     return g
 
+
 if __name__ == "__main__":
-    g = load_graph("dataset/review_full.csv", "dataset/course.csv")
-    recs = g.recommend_courses(["CSC110Y1"], limit=10)
-    print(recs)
+    import python_ta
+
+    python_ta.check_all(config={
+        'max-line-length': 120,
+        'extra-imports': ['csv'],
+        'allowed-io': ['load_graph']
+    })
