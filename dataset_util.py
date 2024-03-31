@@ -5,7 +5,7 @@ This is a helper module for scrape_review and scrape_crouse.
 from bs4 import Tag
 import requests
 
-def get_url_html(url: str) -> str:
+def get_url_html(url: str) -> bytes:
     """Get html content of a webpage at specified url."""
     r = requests.get(url, allow_redirects=True)
     return r.content
