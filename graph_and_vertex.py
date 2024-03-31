@@ -260,6 +260,15 @@ class _Vertex:
             return {n for n in self.neighbours.values() if n.kind == kind}
 
 
+def review_score_sum(row: list) -> int:
+    """Helper function of load_graph. Return a sum of review scores."""
+    sum = 0
+    for score in row[8:17]:
+        sum += int(float(score) * 10)
+
+    return sum
+
+
 def load_graph(reviews_file: str, course_file: str) -> Graph:
     """Return a course review graph corresponding to the given datasets.
 
@@ -302,7 +311,7 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
                 g.add_vertex(r2[3], "lecture")
                 g.add_vertex(int(r2[2][3:4]), "course_level")
                 g.add_edge(r2[2], r2[0])
-                g.add_edge(r2[2], r2[3])
+                g.add_edge(r2[2], r2[3], review_score_sum(r2))
                 g.add_edge(r2[2], int(r2[2][3:4]))
 
                 breadthreqs = courses_breadthreq_mapping[r2[2]]
