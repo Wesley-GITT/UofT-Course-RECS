@@ -1,0 +1,11 @@
+# CSC111 Project 2: Course Recommendation System Libraries
+
+# Code checking
+python-ta~=2.7.0
+
+# Web scraping
+selenium==4.9.0
+# Also download chromedriver so selenium could be run properly
+# See document for details
+requests==2.31.0
+beautifulsoup4==4.12.3
