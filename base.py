@@ -178,19 +178,27 @@ class _Vertex:
         if len(self.neighbours) == 0 or len(other.neighbours) == 0:
             return 0.0
         else:
-            numerator = 0.0
-            v_union = set()
-            for v1 in self.neighbours:
-                v_union.add(v1)
+            weight = {"programme": 0.5, "professor": 0.2, "breadth_req": 0.2, "course_level": 0.1}
+            for kind in weight:
+                v_intersection = set()
+                v_union = set()
+                neighbours_set1 = set(n for n in self.neighbours if n.kind == kind)
+                neighbours_set2 = set(n for n in other.neighbours if n.kind == kind)
+                for v1 in neighbours_set1:
+                    v_union.add(v1)
 
-                for v2 in other.neighbours:
-                    if v1.item == v2.item and self.__weighted_helper(v1) == other.__weighted_helper(v2):
-                        numerator += 1.0
+                    for v2 in neighbours_set2:
+                        if v1.item == v2.item and self.__weighted_helper(v1) == other.__weighted_helper(v2):
+                            v_intersection.add(v1)
 
-                    if v2 not in v_union:
-                        v_union.add(v2)
+                        if v2 not in v_union:
+                            v_union.add(v2)
 
-            return numerator / len(v_union)
+                if len(v_union) != 0:
+                    weight[kind] *= len(v_intersection) / len(v_union)
+                else:
+                    weight[kind] = 0
+            return sum(list(weight.values()))
 
 def review_score_sum(row: list) -> float:
     """Helper function of load_graph. Return a sum of review scores."""
@@ -260,5 +268,5 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
 
 if __name__ == "__main__":
     g = load_graph("dataset/review_full.csv", "dataset/course.csv")
-    recs = g.recommend_courses(["MAT223H1"], limit=10)
+    recs = g.recommend_courses(["CSC110Y1"], limit=10)
     print(recs)
