@@ -60,154 +60,74 @@ class Graph:
         else:
             raise ValueError
 
-    def get_all_vertices(self, kind: str = '') -> set:
+    def get_all_vertices(self, kind: str = '') -> set[_Vertex]:
         """Return a set of all vertex items in this graph.
         """
         if kind != '':
             return {v.item for v in self._vertices.values() if v.kind == kind}
         else:
-            return set(self._vertices.keys())
+            return set(self._vertices.values())
 
-    def calculate_review_score(self, course: Any) -> int | float:
-        """Calculate the average review score for a given course based on reviews from all users.
+    def similarity_score(self, item1: str, item2: str) -> float:
+        """Get similarity score
+
+        Raise ValueError if one of the item is not in the graph
         """
-        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
-            return 0
-        course_vertex = self._vertices[course]
-        if not course_vertex.review_scores:
-            return 0
-        total_score = sum(course_vertex.review_scores)
-        all_review_type = len(course_vertex.review_scores)
 
-        return total_score / all_review_type
+        if item1 in self._vertices and item2 in self._vertices:
+            v1 = self._vertices[item1]
+            v2 = self._vertices[item2]
+            return v1.get_similarity_score(v2)
+        else:
+            raise ValueError 
 
-    def calculate_pre_cor_score(self, course: Any, student_completed_courses: list[str]) -> int | float:
-        """Calculate a score for a given course based on the alignment of its prerequisites with courses
-         a student has completed and the presence of corequisites.
+    def get_course_similarity(self, course: str) -> dict[str, float]:
+        """Return a dictionary of course with their similarity score"""
+
+        mapping = {}
+        for _course in self.get_all_vertices("course"):
+            if _course.item == course:
+                continue
+
+            mapping[_course.item] = self.similarity_score(course, _course)
+
+        return mapping
+
+    def recommend_courses(self, courses: list[str], filter_programme: str = "", limit: int = 9) -> list[str]:
+        """Return a list of up to <limit> recommended courses based on similarity to the list of courses.
+
+        Preconditions:
+            - All({course in self._vertices for course in courses})
+            - All({self._vertices[course].kind == 'course' for course in courses})
+            - (filter_programme in self._vertices and self._vertices[filter_programme].kind == "programme") or filter_programme == ""
+            - limit >= 1
         """
-        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
-            return 0
-        course_vertex = self._vertices[course]
-        input_course_lecture = course_vertex.get_neighbours(kind='lecture')
-        pre_cor_score = 0
-        input_course_pre_cor = set()
 
-        for lecture_vertex in input_course_lecture:
-            input_course_pre_cor.update(lecture_vertex.prerequisite)
-            input_course_pre_cor.update(lecture_vertex.corequisite)
+        recommended_course = []
+        course_score = {}
+        for course in courses:
+            course_score_mapping = self.get_course_similarity(course)
+            for _course in course_score_mapping:
+                if _course not in courses:
+                    if _course not in course_score:
+                        course_score[_course] = 0.0
+                    course_score += course_score_mapping[_course]
 
-        relevant_input_pre_cor = input_course_pre_cor.intersection(set(student_completed_courses))
+        for new_crs in course_score:
+            if new_crs[0:3] == filter_programme or filter_programme == "":
+                if len(recommended_course) >= limit:
+                    break
+                next_index = 0
+                for crs in recommended_course:
+                    new_crs_score = course_score[new_crs]
+                    crs_score = course_score[crs]
 
-        for other_course_item, other_course_vertex in self._vertices.items():
-            if other_course_vertex.kind == 'course' and other_course_item != course:
-                other_lectures = other_course_vertex.get_neighbours(kind='lecture')
-                other_pre_cor = set()
-                for lecture_vertex in other_lectures:
-                    other_pre_cor.update(lecture_vertex.prerequisite)
-                    other_pre_cor.update(lecture_vertex.corequisite)
-                    overlap = relevant_input_pre_cor.intersection(other_pre_cor)
-                    if overlap:
-                        pre_cor_score += len(overlap)
-        return pre_cor_score
+                    if new_crs_score < crs_score or (new_crs_score == crs_score and new_crs > crs):
+                        next_index += 1
 
-    def calculate_program_score(self, course: Any) -> int | float:
-        """Calculate the program score for a given course based on its connections to program vertices.
-        """
-        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
-            return 0
+                recommended_course.insert(next_index, new_crs)
 
-        program_score = 0
-        program_for_course = self._vertices[course].get_neighbours(kind='programme')
-
-        for other_course_item, other_course_vertex in self._vertices.items():
-            if other_course_vertex.kind == 'course' and other_course_item != course:
-                other_course_program = other_course_vertex.get_neighbours(kind='programme')
-                shared_program = program_for_course.intersection(other_course_program)
-                if shared_program:
-                    program_score += 1
-
-        return program_score
-
-    def calculate_breadth_score(self, course: Any) -> int | float:
-        """Calculate the breadth score for a given course based on the alignment of breadth requirement
-        numbers with other courses in the graph.
-        """
-        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
-            return 0
-
-        breadth_score = 0
-        breadth_reqs_for_course = self._vertices[course].get_neighbours(kind='breadth_req')
-
-        for other_course_item, other_course_vertex in self._vertices.items():
-            if other_course_vertex.kind == 'course' and other_course_item != course:
-                other_course_breadth_reqs = other_course_vertex.get_neighbours(kind='breadth_req')
-                shared_breadth = breadth_reqs_for_course.intersection(other_course_breadth_reqs)
-                if shared_breadth:
-                    breadth_score += 1
-
-        return breadth_score
-
-    def calculate_course_level_score(self, course: Any) -> int | float:
-        """Calculate score based on course level alignment."""
-        if course not in self._vertices or not isinstance(self._vertices[course], _Course):
-            return 0
-        course_level_vertices = [n for n in self._vertices[course].get_neighbours(kind='course_level')]
-        if len(course_level_vertices) != 1:
-            return 0
-        input_level = course_level_vertices[0].item
-        level_score = 0
-
-        for other_course_item, other_course_vertex in self._vertices.items():
-            if other_course_vertex.kind == 'course' and other_course_item != course:
-                other_level_vertices = [n for n in other_course_vertex.get_neighbours(kind='course_level')]
-                if len(other_level_vertices) != 1:
-                    continue
-                other_level = other_level_vertices[0].item
-                if input_level == other_level or (input_level != 4 and input_level + 1 == other_level):
-                    level_score += 1
-
-        return level_score
-
-    def compute_total_score(self, course: Any, student_completed_courses: list[str]) -> int | float:
-        """Compute the total score for a given course, combining review, breadth, programme, and
-        prerequisite/corequisite scores.
-        """
-        weight_review = 0.1
-        weight_pre_cor = 0.3
-        weight_program = 0.2
-        weight_breadth = 0.2
-        weight_level = 0.2
-
-        review_score = self.calculate_review_score(course)
-        pre_cor_score = self.calculate_pre_cor_score(course, student_completed_courses)
-        program_score = self.calculate_program_score(course)
-        breadth_score = self.calculate_breadth_score(course)
-        level_score = self.calculate_course_level_score(course)
-
-        total_score = (review_score * weight_review +
-                       pre_cor_score * weight_pre_cor +
-                       program_score * weight_program +
-                       breadth_score * weight_breadth +
-                       level_score * weight_level)
-
-        return total_score
-
-    def recommend_courses(self, input_courses: list[str], student_completed_courses: list[str]) -> dict[str, list[str]]:
-        """Recommend three courses for each course the user has input, there will also be a focus on the program
-        user input
-        """
-        recommendations = {}
-
-        for course in input_courses:
-            score = {}
-            for other_courses in self.get_all_vertices('course'):
-                if other_courses not in input_courses:
-                    total_score = self.compute_total_score(other_courses, student_completed_courses)
-                    score[other_courses] = total_score
-            top_3_recommendations = sorted(score, key=score.get, reverse=True)[:3]
-            recommendations[course] = top_3_recommendations
-
-        return recommendations
+        return recommended_course
 
 
 class _Vertex:
@@ -245,26 +165,54 @@ class _Vertex:
         """Return the degree of this vertex."""
         return len(self.neighbours)
 
-    def get_neighbours(self, kind="") -> dict[Any, Any] | set[Any]:
-        """Return neighbours of kind specified
-
-        Preconditions:
-          - kind in {'course', 'programme', 'breadth_req', 'course_level', 'lecture', ''}
+    def weighted_helper(self, other: _Vertex) -> float:
+        """Return the weight of between two vertex. 
         """
 
-        self.detail = ""
-
-        if kind == "":
-            return self.neighbours
+        if other in self.neighbours:
+            return self.neighbours[other]
         else:
-            return {n for n in self.neighbours.values() if n.kind == kind}
+            return 0.0
+
+    def weighted_score(self, other: _Vertex, common: _Vertex) -> float:
+        """Return a similarity score between two vertex"""
+        score_weight_mapping = {"programme": 0.5,  "lecture": 0.2, "course_level": 0.2, "breadth_req": 0.1}
+        score_weight = 0.0
+        if common.kind in score_weight_mapping:
+            score_weight = score_weight_mapping[common.kind]
+
+        score1 = self.weighted_helper(common)
+        score2 = other.weighted_helper(common)
+        return (1.0 - abs(score1 - score2) / (score1 + score2)) * score_weight
+
+    def get_similarity_score(self, other: _Vertex) -> float:
+        """Return the weighted similarity score between this vertex and other.
+
+        Raise a ValueError if the two vertices are of different kind
+        """
+
+        if len(self.neighbours) == 0 or len(other.neighbours) == 0:
+            return 0.0
+        else:
+            v_union = set()
+            for v1 in self.neighbours:
+                v_union.add(v1)
+
+                for v2 in other.neighbours:
+                    if v1.item == v2.item:
+                       weighted_numerator += self.weighted_score(other, v1)
+
+                    if v2 not in v_union:
+                        v_union.add(v2)
+
+        return weighted_numerator / len(v_union)
 
 
-def review_score_sum(row: list) -> int:
+def review_score_sum(row: list) -> float:
     """Helper function of load_graph. Return a sum of review scores."""
     sum = 0
     for score in row[8:17]:
-        sum += int(float(score) * 10)
+        sum += float(score)
 
     return sum
 
@@ -307,7 +255,7 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
         for r2 in reader:
             if r2[2] in courses_breadthreq_mapping:
                 g.add_vertex(r2[2], "course")
-                g.add_vertex(r2[0], "programme")
+                g.add_vertex(r2[2][0:3], "programme")
                 g.add_vertex(r2[3], "lecture")
                 g.add_vertex(int(r2[2][3:4]), "course_level")
                 g.add_edge(r2[2], r2[0])
