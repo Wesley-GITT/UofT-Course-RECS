@@ -66,7 +66,7 @@ class Graph:
         if kind != '':
             return {v.item for v in self._vertices.values() if v.kind == kind}
         else:
-            return set(self._vertices.values())
+            return set(self._vertices.keys())
 
     def similarity_score(self, item1: str, item2: str) -> float:
         """Get similarity score
@@ -74,22 +74,20 @@ class Graph:
         Raise ValueError if one of the item is not in the graph
         """
 
-        if item1 in self._vertices and item2 in self._vertices:
-            v1 = self._vertices[item1]
-            v2 = self._vertices[item2]
-            return v1.get_similarity_score(v2)
-        else:
-            raise ValueError 
+        v1 = self._vertices[item1]
+        v2 = self._vertices[item2]
+        return v1.get_similarity_score(v2)
 
     def get_course_similarity(self, course: str) -> dict[str, float]:
         """Return a dictionary of course with their similarity score"""
 
         mapping = {}
-        for _course in self.get_all_vertices("course"):
-            if _course.item == course:
+        all_courses = self.get_all_vertices("course")
+        for _course in all_courses:
+            if _course == course:
                 continue
 
-            mapping[_course.item] = self.similarity_score(course, _course)
+            mapping[_course] = self.similarity_score(course, _course)
 
         return mapping
 
@@ -111,10 +109,10 @@ class Graph:
                 if _course not in courses:
                     if _course not in course_score:
                         course_score[_course] = 0.0
-                    course_score += course_score_mapping[_course]
+                    course_score[_course] += course_score_mapping[_course]
 
         for new_crs in course_score:
-            if new_crs[0:3] == filter_programme or filter_programme == "":
+            if (new_crs[0:3] == filter_programme or filter_programme == "") and course_score[new_crs] != 0.0:
                 if len(recommended_course) >= limit:
                     break
                 next_index = 0
@@ -194,6 +192,7 @@ class _Vertex:
         if len(self.neighbours) == 0 or len(other.neighbours) == 0:
             return 0.0
         else:
+            weighted_numerator = 0.0
             v_union = set()
             for v1 in self.neighbours:
                 v_union.add(v1)
@@ -271,3 +270,5 @@ def load_graph(reviews_file: str, course_file: str) -> Graph:
 
 if __name__ == "__main__":
     g = load_graph("dataset/review_small.csv", "dataset/course.csv")
+    recs = g.recommend_courses(["ANA400H1"], limit=10)
+    print(recs)
