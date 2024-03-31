@@ -34,7 +34,3 @@ Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/
   - course-level
 ##### Output
 - recommend (func; default-max: 3 for each course)
-
-#### Information Query
-- Input: course code/course name
-- Output: course information
