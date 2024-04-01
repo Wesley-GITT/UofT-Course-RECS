@@ -3,6 +3,7 @@
 from __future__ import annotations
 from typing import Any, Union
 import csv
+import networkx as nx
 
 
 class Graph:
@@ -109,6 +110,30 @@ class Graph:
 
         return recommended_course
 
+    def to_networkx(self, max_vertices: int = 5000) -> nx.Graph:
+        """Convert this graph into a networkx Graph.
+
+        max_vertices specifies the maximum number of vertices that can appear in the graph.
+        (This is necessary to limit the visualization output for large graphs.)
+
+        Note that this method is provided for you, and you shouldn't change it.
+        """
+        graph_nx = nx.Graph()
+        for v in self._vertices.values():
+            graph_nx.add_node(v.item, kind=v.kind)
+
+            for u in v.neighbours:
+                if graph_nx.number_of_nodes() < max_vertices:
+                    graph_nx.add_node(u.item, kind=u.kind)
+
+                if u.item in graph_nx.nodes:
+                    graph_nx.add_edge(v.item, u.item)
+
+            if graph_nx.number_of_nodes() >= max_vertices:
+                break
+
+        return graph_nx
+
 
 class _Vertex:
     """
@@ -145,7 +170,7 @@ class _Vertex:
         return len(self.neighbours)
 
     def __weighted_helper(self, other: _Vertex) -> float:
-        """Return the weight between two vertex. 
+        """Return the weight between two vertex.
         """
 
         if other in self.neighbours:
