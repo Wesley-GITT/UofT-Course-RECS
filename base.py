@@ -77,19 +77,7 @@ class Graph:
         v2 = self._vertices[item2]
         return v1.get_similarity_score(v2)
 
-    def get_course_similarity(self, course: str) -> dict[str, float]:
-        """Return a dictionary of course with their similarity score"""
-
-        mapping = {}
-        all_courses = self.get_all_vertices("course")
-        for _course in all_courses:
-            if _course != course:
-                new_score = self.similarity_score(course, _course)
-                mapping[_course] = new_score
-
-        return mapping
-
-    def recommend_courses(self, courses: list[str], limit: int = 3) -> list[str]:
+    def recommend_courses(self, courses: list[str], limit: int = 3) -> dict[str, list[str]]:
         """Return a list of up to <limit> recommended courses based on similarity to the list of courses.
 
         Preconditions:
@@ -98,30 +86,28 @@ class Graph:
             - limit >= 1
         """
 
-        recommended_course = []
-        course_score = {}
+        recommended_course = {}
         for course in courses:
-            course_score_mapping = self.get_course_similarity(course)
-            for _course in course_score_mapping:
-                if _course in courses:
+            sub_recommended_course = []
+            sub_recommended_course_mapping = {}
+            for new_crs in self.get_all_vertices("course"):
+                if new_crs in course:
                     continue
 
-                if _course not in course_score:
-                    course_score[_course] = 0.0
-                course_score[_course] += course_score_mapping[_course]
+                next_index = 0
+                new_crs_score = self.similarity_score(course, new_crs)
+                for crs in sub_recommended_course:
+                    crs_score = sub_recommended_course_mapping[crs]
 
-        for new_crs in course_score:
-            next_index = 0
-            for crs in recommended_course:
-                new_crs_score = course_score[new_crs]
-                crs_score = course_score[crs]
+                    if new_crs_score < crs_score or (new_crs_score == crs_score and new_crs > crs):
+                        next_index += 1
 
-                if new_crs_score < crs_score or (new_crs_score == crs_score and new_crs > crs):
-                    next_index += 1
+                sub_recommended_course_mapping[new_crs] = new_crs_score
+                sub_recommended_course.insert(next_index, new_crs)
 
-            recommended_course.insert(next_index, new_crs)
+            recommended_course[course] = sub_recommended_course[:limit]
 
-        return recommended_course[:limit]
+        return recommended_course
 
 
 class _Vertex:

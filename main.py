@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print("Enter one course you have taken or is taking.")
     courses = __input_helper(g, "course")
 
-    recommendation = g.recommend_courses(courses, len(courses) * 3)
+    recommendation = g.recommend_courses(courses, 3)
 
     print("\nThe recommendation course we would like to provides to you is follows")
     print("We have recommend three courses for the each course you entered")
