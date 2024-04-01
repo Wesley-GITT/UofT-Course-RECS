@@ -37,7 +37,7 @@ def __input_helper(graph: base.Graph, input_kind: str, completed_str: str = "DON
     choice = ""
     input_kind = str.join(" ", input_kind.split("_"))
     print()
-    while choice.upper() != completed_str and len(mset) < 1:
+    while choice.upper() != completed_str:
         choice = input(f"Enter {input_kind}: ").upper()
         set_to_find = graph.get_all_vertices(input_kind)
         if choice in set_to_find:
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print("Enter one course you have taken or is taking.")
     courses = __input_helper(g, "course")
 
-    recommendation = g.recommend_courses(courses, 3)
+    recommendation = g.recommend_courses(courses, len(courses) * 3)
 
     print("\nThe recommendation course we would like to provides to you is follows")
     print("We have recommend three courses for the each course you entered")
