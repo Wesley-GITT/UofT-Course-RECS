@@ -37,7 +37,7 @@ def __input_helper(graph: base.Graph, input_kind: str, completed_str: str = "DON
     choice = ""
     input_kind = str.join(" ", input_kind.split("_"))
     print()
-    while choice.upper() != completed_str:
+    while choice.upper() != completed_str and len(mset) < 1:
         choice = input(f"Enter {input_kind}: ").upper()
         set_to_find = graph.get_all_vertices(input_kind)
         if choice in set_to_find:
@@ -62,16 +62,16 @@ if __name__ == "__main__":
     print("Welcome to the Course Recommendation Service(UofT version)")
     name = input("Please enter your name to continue: ")
     print("Hi, " + name + ". You can now enter the courses you have completed or is taking this year\n")
-    print("Enter the course you have taken or is taking.\nEnter one course code each time and press ENTER.\nIf you are DONE, enter DONE and type ENTER to continue.")
+    print("Enter one course you have taken or is taking.")
     courses = __input_helper(g, "course")
 
-    recommendation = g.recommend_courses(courses, 5)
+    recommendation = g.recommend_courses(courses, 3)
 
     print("\nThe recommendation course we would like to provides to you is follows")
     print("We have recommend three courses for the each course you entered")
     print(recommendation)
 
-    print("\nFor further information on pre-requisite courses and co-requisite course,")
+    print("\nFor further information on pre-requisite courses and co-requisite course.")
     print("please view the following websites we provided")
 
     website = f"https://artsci.calendar.utoronto.ca/course/<COURSE_CODE>"
