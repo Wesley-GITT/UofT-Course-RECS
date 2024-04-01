@@ -59,7 +59,7 @@ class Graph:
         else:
             raise ValueError
 
-    def get_all_vertices(self, kind: str = '') -> set[_Vertex]:
+    def get_all_vertices(self, kind: str = '') -> set[str]:
         """Return a set of all vertex items in this graph.
         """
         if kind != '':
