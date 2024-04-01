@@ -89,14 +89,12 @@ class Graph:
 
         return mapping
 
-    def recommend_courses(self, courses: list[str], programme_filter: list[str], limit: int = 3) -> list[str]:
+    def recommend_courses(self, courses: list[str], limit: int = 3) -> list[str]:
         """Return a list of up to <limit> recommended courses based on similarity to the list of courses.
 
         Preconditions:
             - All({course in self._vertices for course in courses})
             - All({self._vertices[course].kind == 'course' for course in courses})
-            - All({programme in self._vertices for programme in programme_filter})
-            - All({self._vertices[programme].kind == 'programme' for programme in programme_filter})
             - limit >= 1
         """
 
@@ -115,9 +113,6 @@ class Graph:
         for new_crs in course_score:
             next_index = 0
             for crs in recommended_course:
-                if new_crs[0:3] not in programme_filter and programme_filter != []:
-                    continue
-
                 new_crs_score = course_score[new_crs]
                 crs_score = course_score[crs]
 

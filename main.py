@@ -65,9 +65,7 @@ if __name__ == "__main__":
     print("Enter the course you have taken or is taking.\nEnter one course code each time and press ENTER.\nIf you are DONE, enter DONE and type ENTER to continue.")
     courses = __input_helper(g, "course")
 
-    print("\nEnter the programme you will be or is in.\nEnter programme code each time and press ENTER.\nIf you are DONE, enter DONE and type ENTER to continue.")
-    programme_filter = __input_helper(g, "programme")
-    recommendation = g.recommend_courses(courses, programme_filter, 5)
+    recommendation = g.recommend_courses(courses, 5)
 
     print("\nThe recommendation course we would like to provides to you is follows")
     print("We have recommend three courses for the each course you entered")
