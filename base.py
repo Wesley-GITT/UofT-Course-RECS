@@ -73,6 +73,9 @@ class Graph:
         Raise ValueError if one of the item is not in the graph
         """
 
+        if item1 not in self._vertices or item2 not in self._vertices:
+            raise ValueError
+
         v1 = self._vertices[item1]
         v2 = self._vertices[item2]
         return v1.get_similarity_score(v2)
