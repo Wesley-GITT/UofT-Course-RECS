@@ -8,10 +8,10 @@ Follow [this link](https://www.teach.cs.toronto.edu/~csc111h/winter/assignments/
 ### Install Chrome:
 Download and install Google Chrome at https://www.google.com/chrome/
 
-If you have already installed chrome, please make sure your browser version is no less than 123.*.****.**
+If you have already installed chrome, please make sure your browser version is no less than 123.0.0000.00
 
 ### Install Chromedriver
-Download and chromedriver 124.*.***.** from https://googlechromelabs.github.io/chrome-for-testing/#stable. Your should download the one with chromedriver at the first column.
+Download and chromedriver 124.0.000.00 from https://googlechromelabs.github.io/chrome-for-testing/#stable. Your should download the one with chromedriver at the first column.
 
 If you are using Linux-Arm, you can also download chromedriver from https://github.com/electron/electron/releases/tag/v30.0.1.
 
