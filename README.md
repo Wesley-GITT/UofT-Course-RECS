@@ -26,7 +26,7 @@ Your python version should be not less than 3.10
 - beautifulsoup4==4.12.3
 
 To start selenium correctly, specify the location of webdriver in the python code.
-```
+```Python
   from selenium import webdriver
   driver = webdriver.Chrome(executable_path='ABSOLUTE_PATH\TO\CHROMEDRIVER')    
 ```
