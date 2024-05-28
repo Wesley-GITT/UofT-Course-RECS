@@ -31,7 +31,7 @@ To start selenium correctly, specify the location of webdriver in the python cod
   driver = webdriver.Chrome(executable_path='ABSOLUTE_PATH\TO\CHROMEDRIVER')    
 ```
 
-Then you are should be able to scrape the data and run the course recommendation program.
+Then you should be able to scrape the data and run the course recommendation program.
 
 ## Tasks and Features
 
