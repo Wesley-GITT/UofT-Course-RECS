@@ -7,5 +7,5 @@ python-ta~=2.7.0
 selenium==4.9.0
 # Also download chromedriver so selenium could be run properly
 # See document for details
-requests==2.31.0
+requests>=2.32.0
 beautifulsoup4==4.12.3
